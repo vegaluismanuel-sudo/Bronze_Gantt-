@@ -1680,7 +1680,8 @@
                 const user = await res.json();
                 
                 // Si el usuario no tiene licencia activa, forzar redirección de seguridad a activación
-                if (!user.licenseActive) {
+                const isLicenseActive = user.license_active !== undefined ? user.license_active : user.licenseActive;
+                if (!isLicenseActive) {
                     localStorage.setItem('licenseActive', 'false');
                     window.location.href = '/login.html';
                     return;
