@@ -2242,7 +2242,7 @@
 
             updateExcelHeaderHighlights(tdElement);
 
-            const task = activeProject.tasks.find(t => t.id === taskId);
+            const task = activeProject.tasks.find(t => t.id == taskId);
             const inputField = document.getElementById("formula-input-field");
             
             const cellRef = getExcelCellReference(activeProject.tasks.indexOf(task), colKey);
@@ -3310,7 +3310,7 @@
             }
 
             pushUndoState();
-            activeProject.tasks = activeProject.tasks.filter(t => t.id !== selectedCell.rowId);
+            activeProject.tasks = activeProject.tasks.filter(t => t.id != selectedCell.rowId);
             
             // Limpiar dependencias obsoletas
             activeProject.tasks.forEach(t => {
@@ -3329,7 +3329,7 @@
 
         function indentRow() {
             if (!selectedCell.rowId) return;
-            const taskIndex = activeProject.tasks.findIndex(t => t.id === selectedCell.rowId);
+            const taskIndex = activeProject.tasks.findIndex(t => t.id == selectedCell.rowId);
             
             if (taskIndex > 0) {
                 const currentTask = activeProject.tasks[taskIndex];
@@ -3347,7 +3347,7 @@
 
         function outdentRow() {
             if (!selectedCell.rowId) return;
-            const task = activeProject.tasks.find(t => t.id === selectedCell.rowId);
+            const task = activeProject.tasks.find(t => t.id == selectedCell.rowId);
             
             if (task && task.indent > 0) {
                 pushUndoState();
