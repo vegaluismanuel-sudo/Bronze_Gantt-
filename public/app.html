@@ -2141,6 +2141,12 @@
                 const tdWbs = document.createElement("td");
                 tdWbs.className = "excel-cell col-wbs";
                 tdWbs.textContent = calculateWBSLabel(activeProject.tasks, index);
+                tdWbs.onclick = () => {
+                    const nameTd = tr.querySelector(".col-name");
+                    if (nameTd) {
+                        selectExcelCell(nameTd, task.id, "name");
+                    }
+                };
                 tr.appendChild(tdWbs);
 
                 // Columnas de datos
@@ -2191,6 +2197,11 @@
                         td.onmouseleave = () => {
                             hideDependencyTooltip();
                         };
+                    }
+
+                    // Preservar la selección visual después de volver a renderizar la cuadrícula
+                    if (selectedCell && selectedCell.rowId === task.id && selectedCell.colKey === col.key) {
+                        td.classList.add("selected");
                     }
 
                     tr.appendChild(td);
