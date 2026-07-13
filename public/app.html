@@ -469,6 +469,31 @@
             color: var(--text-medium);
         }
 
+        .project-delete-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: none;
+            border: none;
+            color: #a80000;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+        .project-delete-btn:hover {
+            background-color: #fde7e9 !important;
+            color: #a80000 !important;
+        }
+        .project-delete-btn i, .project-delete-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
         /* VISTA 2: GRID & TIMELINE (EXCEL SPREADSHEET LOOK) */
         .workspace-split-pane {
             flex: 1;
@@ -1727,6 +1752,9 @@
                 card.onclick = () => loadProjectWorkspace(proj.id);
 
                 card.innerHTML = `
+                    <button class="project-delete-btn" onclick="deleteProject('${proj.id}', event)" title="Eliminar Proyecto">
+                        <i data-lucide="trash-2"></i>
+                    </button>
                     <div class="project-card-title">${proj.name}</div>
                     <div class="project-card-meta">Fecha Inicio: ${proj.start} | Estado: ${proj.status}</div>
                     <div class="project-card-progress">
@@ -1739,6 +1767,9 @@
                 `;
                 listContainer.appendChild(card);
             });
+            
+            // Re-render lucide icons for the delete buttons
+            lucide.createIcons();
         }
 
         async function loadProjectWorkspace(projectId) {
@@ -1758,6 +1789,33 @@
                 switchSheet('gantt');
             } catch (err) {
                 console.error(err);
+            }
+        }
+
+        async function deleteProject(projectId, event) {
+            // Evitar que al hacer clic en eliminar se intente abrir el proyecto
+            if (event) event.stopPropagation();
+            
+            const confirmDelete = confirm("¿Está seguro de que desea eliminar este proyecto de forma permanente? Esta acción no se puede deshacer.");
+            if (!confirmDelete) return;
+
+            try {
+                const res = await fetch(`/api/projects/${projectId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.ok) {
+                    alert("Proyecto eliminado con éxito.");
+                    // Volver a cargar la lista de proyectos en el dashboard
+                    loadProjectsList();
+                } else {
+                    const data = await res.json();
+                    alert(data.error || "Error al eliminar el proyecto.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error de conexión al intentar eliminar el proyecto.");
             }
         }
 
