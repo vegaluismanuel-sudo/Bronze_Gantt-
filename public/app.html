@@ -1,0 +1,3558 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bronze Gantt Pro - Planificador de Proyectos</title>
+    <!-- Google Fonts: Inter y JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- SheetJS (XLSX) CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        /* ==========================================================================
+           TEMA EXCEL CLASSIC - BRONZE GANTT PRO
+           ========================================================================== */
+        :root {
+            --excel-green: #8c5b30; /* Bronce Primario */
+            --excel-green-dark: #5c3a1d; /* Bronce Oscuro */
+            --excel-green-light: #f5ece3; /* Bronce Claro */
+            --excel-green-soft: #faf5f0; /* Bronce Suave */
+            
+            /* Colores de Bronze Gantt */
+            --bg-app: #f3f2f1;
+            --bg-card: #ffffff;
+            --bg-sidebar: #8c5b30; /* Barra lateral en bronce */
+            --bg-light: #f3f2f1;
+            --bg-light-hover: #eaeaea;
+            --bg-header-cell: #f3f2f1;
+            
+            --text-dark: #323130;
+            --text-medium: #605e5c;
+            --text-muted: #a19f9d;
+            
+            --border-color: #d2d0ce;
+            --border-grid: #d2d0ce;
+
+            /* Estados */
+            --success: #8c5b30;
+            --danger: #a80000;
+            --warning: #d83b01;
+            
+            --critical-path: #a80000;
+            --critical-glow: rgba(168, 0, 0, 0.25);
+
+            --font-sans: 'Segoe UI', 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 10px rgba(0,0,0,0.08);
+
+            --radius-sm: 2px;
+            --radius-md: 4px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-app);
+            color: var(--text-dark);
+            height: 100vh;
+            overflow: hidden;
+            line-height: 1.4;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ==========================================================================
+           BARRA DE TÍTULO PRINCIPAL (MICROSOFT OFFICE STYLE)
+           ========================================================================== */
+        .excel-title-bar {
+            height: 36px;
+            background-color: var(--excel-green-dark);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            font-size: 12px;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .title-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .title-icon {
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+        }
+
+        .title-center {
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+
+        .title-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-profile-btn {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ==========================================================================
+           CINTA DE OPCIONES DE EXCEL (RIBBON BAR)
+           ========================================================================== */
+        .excel-ribbon-container {
+            background-color: #f3f2f1;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        /* Pestañas superiores (Archivo, Inicio, Fórmulas...) */
+        .ribbon-tabs {
+            display: flex;
+            background-color: var(--excel-green);
+            padding-left: 12px;
+            height: 32px;
+        }
+
+        .ribbon-tab-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.85);
+            padding: 0 16px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            outline: none;
+            transition: background-color 0.15s, color 0.15s;
+        }
+
+        .ribbon-tab-btn:hover {
+            background-color: var(--excel-green-dark);
+            color: #ffffff;
+        }
+
+        .ribbon-tab-btn.active {
+            background-color: #f3f2f1;
+            color: var(--excel-green);
+            font-weight: 600;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+        }
+
+        /* Panel de Controles (Ribbon Body) */
+        .ribbon-body {
+            height: 85px;
+            background-color: #f3f2f1;
+            display: none;
+            align-items: center;
+            padding: 6px 12px;
+            gap: 12px;
+            overflow-x: auto;
+        }
+
+        .ribbon-body.active {
+            display: flex;
+        }
+
+        /* Sección de herramientas agrupadas */
+        .ribbon-group {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            justify-content: space-between;
+            border-right: 1px solid #d2d0ce;
+            padding-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .ribbon-group-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+        }
+
+        .ribbon-group-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        /* Botones de acción del Ribbon */
+        .ribbon-btn-large {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: 1px solid transparent;
+            padding: 4px 8px;
+            cursor: pointer;
+            border-radius: var(--radius-md);
+            color: var(--text-dark);
+            gap: 4px;
+            height: 58px;
+            min-width: 60px;
+            transition: background-color 0.15s, border-color 0.15s;
+        }
+
+        .ribbon-btn-large:hover {
+            background-color: #eaeaea;
+            border-color: #d2d0ce;
+        }
+
+        .ribbon-btn-large svg {
+            width: 22px;
+            height: 22px;
+            color: var(--excel-green);
+        }
+
+        .ribbon-btn-large span {
+            font-size: 10.5px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .ribbon-btn-small {
+            display: flex;
+            align-items: center;
+            background: none;
+            border: 1px solid transparent;
+            padding: 4px 8px;
+            cursor: pointer;
+            border-radius: var(--radius-md);
+            color: var(--text-dark);
+            gap: 6px;
+            height: 26px;
+            transition: background-color 0.15s;
+        }
+
+        .ribbon-btn-small:hover {
+            background-color: #eaeaea;
+            border-color: #d2d0ce;
+        }
+
+        .ribbon-btn-small.active {
+            background-color: var(--excel-green-light);
+            border-color: var(--excel-green);
+            color: var(--excel-green-dark);
+        }
+
+        .ribbon-btn-small svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .ribbon-btn-small span {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .ribbon-select {
+            padding: 3px 6px;
+            font-size: 11px;
+            border: 1px solid var(--border-color);
+            background-color: #ffffff;
+            border-radius: var(--radius-sm);
+            outline: none;
+            color: var(--text-dark);
+        }
+
+        /* ==========================================================================
+           BARRA DE FÓRMULAS DE EXCEL (FORMULA BAR)
+           ========================================================================== */
+        .excel-formula-bar {
+            height: 32px;
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0;
+            z-index: 10;
+            flex-shrink: 0;
+        }
+
+        .formula-cell-indicator {
+            width: 70px;
+            height: 100%;
+            background-color: #ffffff;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-dark);
+            user-select: none;
+        }
+
+        .formula-fx-icon {
+            width: 32px;
+            height: 100%;
+            background-color: #ffffff;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--text-muted);
+            font-family: "Times New Roman", Times, serif;
+            font-style: italic;
+            user-select: none;
+        }
+
+        .formula-input-container {
+            flex: 1;
+            height: 100%;
+        }
+
+        .formula-input-container input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            padding: 0 12px;
+            font-size: 12px;
+            font-family: var(--font-mono);
+            background: transparent;
+            color: var(--text-dark);
+            outline: none;
+        }
+
+        /* ==========================================================================
+           DIVISOR SPLIT-PANE WORKSPACE
+           ========================================================================== */
+        .workspace-main {
+            flex: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        /* VISTA 1: DASHBOARD PROYECTOS */
+        .view-pane {
+            display: none;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #ffffff;
+        }
+
+        .view-pane.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dashboard-container {
+            padding: 24px;
+            overflow-y: auto;
+            max-width: 1100px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--excel-green);
+            padding-bottom: 12px;
+        }
+
+        .dashboard-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--excel-green-dark);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .project-card {
+            border: 1px solid var(--border-color);
+            background-color: #ffffff;
+            border-radius: 4px;
+            padding: 20px;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .project-card:hover {
+            border-color: var(--excel-green);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+
+        .project-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: var(--excel-green);
+        }
+
+        .project-card-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .project-card-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .project-card-progress {
+            background-color: #f3f2f1;
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .project-card-progress-bar {
+            height: 100%;
+            background-color: var(--excel-green);
+        }
+
+        .project-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+            font-size: 11.5px;
+            color: var(--text-medium);
+        }
+
+        /* VISTA 2: GRID & TIMELINE (EXCEL SPREADSHEET LOOK) */
+        .workspace-split-pane {
+            flex: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        /* Panel Izquierdo: Rejilla de Excel */
+        .grid-panel {
+            width: 50%;
+            min-width: 300px;
+            height: 100%;
+            overflow: auto;
+            background-color: #ffffff;
+            border-right: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        /* Splitter col-resize */
+        .split-handle {
+            width: 4px;
+            height: 100%;
+            background-color: var(--border-color);
+            cursor: col-resize;
+            position: absolute;
+            left: 50%;
+            z-index: 50;
+        }
+
+        .split-handle:hover, .split-handle.dragging {
+            background-color: var(--excel-green);
+            width: 6px;
+        }
+
+        /* Panel Derecho: Gantt SVG/Timeline */
+        .gantt-panel {
+            flex: 1;
+            height: 100%;
+            overflow: auto;
+            background-color: #f3f2f1;
+            position: relative;
+        }
+
+        /* ==========================================================================
+           ESTILO DE TABLA DE EXCEL (SPREADSHEET GRID)
+           ========================================================================== */
+        .excel-table {
+            border-collapse: collapse;
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        .excel-table thead tr {
+            height: 38px;
+        }
+
+        .excel-table tbody tr {
+            height: 24px;
+        }
+
+        .excel-table th, .excel-table td {
+            font-size: 11.5px;
+            border-bottom: 1px solid #d2d0ce;
+            border-right: 1px solid #d2d0ce;
+            height: 24px; /* Más compacta, estilo Excel real */
+            padding: 0 6px;
+            vertical-align: middle;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Esquina superior izquierda (Seleccionar todo) */
+        .excel-table th.excel-corner {
+            position: sticky;
+            top: 0;
+            left: 0;
+            background-color: #e1dfdd;
+            z-index: 35;
+            border-bottom: 1px solid #a19f9d;
+            border-right: 1px solid #a19f9d;
+            width: 40px;
+            min-width: 40px;
+            cursor: pointer;
+        }
+
+        /* Encabezados de Columna A, B, C... */
+        .excel-table th.excel-col-header {
+            position: sticky;
+            top: 0;
+            background-color: #f3f2f1;
+            z-index: 10;
+            border-bottom: 1px solid #a19f9d;
+            color: var(--text-dark);
+            font-weight: 500;
+            text-align: center;
+            user-select: none;
+            height: 38px; /* ALINEADA CON CABECERA GANTT */
+            line-height: 37px;
+        }
+
+        .excel-table th.excel-col-header.active {
+            background-color: var(--excel-green-light);
+            color: var(--excel-green-dark);
+            box-shadow: inset 0 -2px 0 var(--excel-green);
+        }
+
+        /* Encabezados de Fila 1, 2, 3... */
+        .excel-table td.excel-row-header {
+            position: sticky;
+            left: 0;
+            background-color: #f3f2f1;
+            z-index: 20;
+            border-right: 1px solid #a19f9d;
+            font-weight: 500;
+            text-align: center;
+            color: var(--text-dark);
+            user-select: none;
+            width: 40px;
+            min-width: 40px;
+        }
+
+        .excel-table td.excel-row-header.active {
+            background-color: var(--excel-green-light);
+            color: var(--excel-green-dark);
+            box-shadow: inset -2px 0 0 var(--excel-green);
+        }
+
+        /* Celdas de Excel */
+        .excel-table td.excel-cell {
+            background-color: #ffffff;
+            color: var(--text-dark);
+            cursor: cell;
+            outline: none;
+            height: 24px;
+            box-sizing: border-box;
+            line-height: 22px;
+        }
+
+        /* Celda Seleccionada */
+        .excel-table td.excel-cell.selected {
+            box-shadow: inset 0 0 0 1px var(--excel-green), 0 0 0 1.5px var(--excel-green);
+            background-color: var(--excel-green-soft);
+            z-index: 25;
+            position: relative;
+        }
+
+        /* Celda en Edición */
+        .excel-table td.excel-cell.editing {
+            padding: 0 !important;
+            z-index: 30;
+        }
+
+        .excel-table td.excel-cell.editing input {
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--excel-green);
+            padding: 0 4px;
+            font-size: 11.5px;
+            font-family: var(--font-sans);
+            outline: none;
+            background-color: #ffffff;
+            color: var(--text-dark);
+            box-sizing: border-box;
+        }
+
+        /* Columnas específicas */
+        .col-wbs { width: 65px; text-align: center; font-weight: 500; color: var(--text-muted); background-color: #f3f2f1 !important; cursor: not-allowed !important; }
+        .col-name { width: 220px; text-align: left; }
+        .col-start { width: 95px; text-align: center; }
+        .col-end { width: 95px; text-align: center; }
+        .col-duration { width: 90px; text-align: right; }
+        .col-dependencies { width: 115px; text-align: left; font-family: var(--font-mono); }
+        .col-progress { width: 90px; text-align: right; }
+        .col-owner { width: 115px; text-align: left; }
+        .col-risk { width: 90px; text-align: center; }
+
+        .indent-0 { padding-left: 6px !important; font-weight: 700; }
+        .indent-1 { padding-left: 18px !important; font-weight: 600; }
+        .indent-2 { padding-left: 30px !important; font-weight: 500; }
+        .indent-3 { padding-left: 42px !important; }
+
+        .parent-row {
+            background-color: #f8f8f8 !important;
+            font-weight: 600;
+        }
+
+        .risk-pill {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 5px;
+            border-radius: 2px;
+            text-transform: uppercase;
+        }
+        .risk-high { background-color: #fde7e9; color: var(--danger); }
+        .risk-medium { background-color: #fff4ce; color: #7a5e00; }
+        .risk-low { background-color: #dff6dd; color: var(--success); }
+
+        /* ==========================================================================
+           TIMELINE GANTT (EXCEL ALIGNED)
+           ========================================================================== */
+        .gantt-container {
+            display: flex;
+            flex-direction: column;
+            min-width: 1200px;
+            height: 100%;
+            position: relative;
+            background-color: #ffffff;
+            user-select: none;
+        }
+
+        .gantt-header {
+            position: sticky;
+            top: 0;
+            background-color: #f3f2f1;
+            z-index: 30;
+            border-bottom: 1px solid #a19f9d;
+        }
+
+        .gantt-header-row {
+            display: flex;
+            height: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .gantt-header-row.months {
+            height: 20px;
+            font-weight: 600;
+            font-size: 11px;
+            color: var(--text-dark);
+            align-items: center;
+        }
+
+        .gantt-header-row.days {
+            height: 18px;
+            font-size: 9.5px;
+            color: var(--text-medium);
+        }
+
+        .gantt-header-cell {
+            border-right: 1px solid var(--border-color);
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-sizing: border-box;
+        }
+
+        .gantt-header-cell.weekend {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .gantt-body {
+            position: relative;
+            flex: 1;
+        }
+
+        .gantt-svg-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .dep-line {
+            fill: none;
+            stroke: var(--text-muted);
+            stroke-width: 1.5px;
+            stroke-dasharray: 2 2;
+        }
+
+        .dep-line.critical {
+            stroke: var(--critical-path);
+            stroke-width: 2px;
+            stroke-dasharray: none;
+        }
+
+        .dep-arrow {
+            fill: var(--text-muted);
+        }
+
+        .dep-arrow.critical {
+            fill: var(--critical-path);
+        }
+
+        .dep-line.highlighted {
+            stroke: #0078d4 !important;
+            stroke-width: 2.5px !important;
+            stroke-dasharray: none !important;
+            opacity: 1 !important;
+            z-index: 10 !important;
+        }
+
+        .dep-arrow.highlighted {
+            fill: #0078d4 !important;
+        }
+
+        #gantt-rows-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .gantt-row {
+            display: flex;
+            position: absolute;
+            left: 0;
+            width: 100%;
+            border-bottom: 1px solid #d2d0ce;
+            box-sizing: border-box;
+        }
+
+        .gantt-grid-cell {
+            border-right: 1px solid #d2d0ce;
+            height: 100%;
+            flex-shrink: 0;
+            box-sizing: border-box;
+        }
+
+        .gantt-grid-cell.weekend {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        /* Barras de Gantt */
+        .gantt-bar-wrapper {
+            position: absolute;
+            height: 14px;
+            top: 5px;
+            border-radius: 2px;
+            background-color: var(--excel-green);
+            color: #ffffff;
+            font-size: 9px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            cursor: move;
+            z-index: 10;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+
+        .gantt-bar-wrapper:hover {
+            box-shadow: 0 0 0 2px var(--excel-green-light);
+        }
+
+        .gantt-bar-wrapper.critical {
+            background-color: var(--critical-path);
+            box-shadow: 0 0 4px var(--critical-glow);
+        }
+
+        .gantt-bar-wrapper.milestone {
+            width: 10px !important;
+            height: 10px !important;
+            transform: rotate(45deg);
+            background-color: #000000;
+            border: 1px solid #ffffff;
+            top: 7px;
+            border-radius: 1px;
+            cursor: pointer;
+        }
+
+        .gantt-bar-wrapper.milestone.critical {
+            background-color: var(--critical-path);
+        }
+
+        .gantt-bar-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background-color: var(--excel-green-dark);
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.5;
+        }
+
+        .gantt-bar-label {
+            padding: 0 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .gantt-bar-resize-handle {
+            position: absolute;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            cursor: col-resize;
+            background-color: rgba(255, 255, 255, 0.2);
+            z-index: 15;
+        }
+
+        .gantt-bar-resize-handle.left { left: 0; }
+        .gantt-bar-resize-handle.right { right: 0; }
+
+        /* ==========================================================================
+           PESTAÑAS DE HOJA (EXCEL SHEET TABS)
+           ========================================================================== */
+        .excel-sheet-tabs-container {
+            height: 32px;
+            background-color: #f3f2f1;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            justify-content: space-between;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .tabs-left {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            height: 100%;
+        }
+
+        .tab-nav-btn {
+            background: none;
+            border: none;
+            color: var(--text-medium);
+            cursor: pointer;
+            padding: 4px 6px;
+            display: flex;
+            align-items: center;
+            border-radius: var(--radius-sm);
+        }
+
+        .tab-nav-btn:hover {
+            background-color: #eaeaea;
+        }
+
+        .sheet-tab {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            background-color: #f3f2f1;
+            border-right: 1px solid var(--border-color);
+            padding: 0 16px;
+            font-size: 11.5px;
+            font-weight: 500;
+            color: var(--text-medium);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+
+        .sheet-tab.active {
+            background-color: #ffffff;
+            color: var(--excel-green);
+            font-weight: 600;
+            border-bottom: 2px solid var(--excel-green);
+        }
+
+        .sheet-tab-add {
+            background: none;
+            border: none;
+            color: var(--excel-green);
+            padding: 6px;
+            cursor: pointer;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 6px;
+        }
+
+        .sheet-tab-add:hover {
+            background-color: #eaeaea;
+        }
+
+        /* ==========================================================================
+           BARRA DE ESTADO DE EXCEL (STATUS BAR)
+           ========================================================================== */
+        .excel-status-bar {
+            height: 24px;
+            background-color: var(--excel-green);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            font-size: 11px;
+            font-weight: 500;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* ==========================================================================
+           MODALES Y FORMULARIOS
+           ========================================================================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.4);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-card {
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            width: 450px;
+            max-width: 90vw;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f3f2f1;
+        }
+
+        .modal-header h3 {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .modal-body {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-group label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-medium);
+        }
+
+        .form-group input, .form-group select {
+            padding: 6px 10px;
+            font-size: 12px;
+            border: 1px solid var(--border-color);
+            outline: none;
+            background-color: #ffffff;
+            color: var(--text-dark);
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--excel-green);
+        }
+
+        .modal-footer {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            background-color: #f3f2f1;
+        }
+
+        .btn-office {
+            padding: 5px 16px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background-color: #ffffff;
+            color: var(--text-dark);
+            outline: none;
+        }
+
+        .btn-office:hover {
+            background-color: #eaeaea;
+        }
+
+        .btn-office.primary {
+            background-color: var(--excel-green);
+            color: #ffffff;
+            border-color: transparent;
+        }
+
+        .btn-office.primary:hover {
+            background-color: var(--excel-green-dark);
+        }
+
+        /* Banner de solo lectura */
+        .read-only-banner {
+            background-color: var(--excel-green-light);
+            border-bottom: 1px solid var(--excel-green);
+            padding: 4px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--excel-green-dark);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 105;
+        }
+
+        @media print {
+            @page {
+                size: landscape;
+                margin: 0.5cm;
+            }
+            body {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+            }
+            .excel-header,
+            .excel-ribbon-container,
+            .excel-formula-bar,
+            .excel-status-bar,
+            #workspace-split-handle,
+            .read-only-banner,
+            button,
+            .user-profile-btn {
+                display: none !important;
+            }
+            .workspace-main {
+                height: auto !important;
+                overflow: visible !important;
+            }
+            #view-workspace {
+                display: block !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+            #workspace-splitter-container {
+                display: flex !important;
+                flex-direction: row !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+            .grid-panel,
+            .gantt-panel {
+                height: auto !important;
+                overflow: visible !important;
+                width: 50% !important;
+            }
+            .excel-table {
+                width: 100% !important;
+            }
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Banner Modo Vista Pública (Simulación) -->
+    <div id="read-only-banner" class="read-only-banner" style="display: none;">
+        <span>
+            <strong>[MODO LECTOR]</strong> Cronograma en vivo compartido como stakeholder externo (acceso gratuito).
+        </span>
+        <button class="btn-office" onclick="exitReadOnlyMode()" style="padding: 2px 8px; font-size: 10px;">Regresar a Editor</button>
+    </div>
+
+    <!-- BARRA DE TÍTULO SUPERIOR (ESTILO OFFICE) -->
+    <header class="excel-title-bar">
+        <div class="title-left">
+            <span class="title-icon"><i data-lucide="grid-3x3" style="width: 16px; height: 16px;"></i></span>
+            <span class="title-center" id="excel-app-title">Bronze Gantt Pro - Proyecto1.xlsx</span>
+        </div>
+        <div class="title-right">
+            <span id="user-email-display">usuario@correo.com</span>
+            <button class="user-profile-btn" onclick="logoutUser()">
+                <i data-lucide="log-out" style="width: 14px; height: 14px;"></i> <span>Cerrar Sesión</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- CINTA DE OPCIONES DE EXCEL (RIBBON BAR) -->
+    <div class="excel-ribbon-container">
+        <div class="ribbon-tabs">
+            <button class="ribbon-tab-btn" onclick="switchTab('file')">Archivo</button>
+            <button class="ribbon-tab-btn active" onclick="switchTab('home')">Inicio</button>
+            <button class="ribbon-tab-btn" onclick="switchTab('formulas')">Fórmulas</button>
+            <button class="ribbon-tab-btn" onclick="switchTab('data')">Datos</button>
+        </div>
+
+        <!-- TAB BODY: ARCHIVO -->
+        <div class="ribbon-body" id="ribbon-file">
+            <div class="ribbon-group">
+                <div class="ribbon-group-row">
+                    <button class="ribbon-btn-large" onclick="switchView('dashboard')">
+                        <i data-lucide="folder-open"></i>
+                        <span>Abrir Proyecto</span>
+                    </button>
+                    <button class="ribbon-btn-large" onclick="openCreateProjectModal()">
+                        <i data-lucide="plus-square"></i>
+                        <span>Nuevo Proyecto</span>
+                    </button>
+                    <button class="ribbon-btn-large" onclick="saveProjectToServer()">
+                        <i data-lucide="save"></i>
+                        <span>Guardar</span>
+                    </button>
+                </div>
+                <span class="ribbon-group-label">Documento</span>
+            </div>
+            <div class="ribbon-group">
+                <div class="ribbon-group-row">
+                    <button class="ribbon-btn-large" onclick="exportToExcel()">
+                        <i data-lucide="download"></i>
+                        <span>Descargar</span>
+                    </button>
+                    <button class="ribbon-btn-large" onclick="document.getElementById('import-excel-file').click()">
+                        <i data-lucide="upload"></i>
+                        <span>Importar</span>
+                    </button>
+                    <input type="file" id="import-excel-file" style="display: none;" accept=".xlsx, .xls" onchange="importFromExcel(event)">
+                </div>
+                <span class="ribbon-group-label">Importación / Exportación</span>
+            </div>
+        </div>
+
+        <!-- TAB BODY: INICIO -->
+        <div class="ribbon-body active" id="ribbon-home">
+            <div class="ribbon-group">
+                <div class="ribbon-group-row" style="gap: 8px;">
+                    <button class="ribbon-btn-large" onclick="switchView('dashboard')">
+                        <i data-lucide="layout-dashboard"></i>
+                        <span>Dashboard</span>
+                    </button>
+                </div>
+                <span class="ribbon-group-label">Vistas</span>
+            </div>
+            
+            <div class="ribbon-group">
+                <div class="ribbon-group-row" style="gap: 2px;">
+                    <button class="ribbon-btn-small" onclick="addNewTaskRow()" title="Insertar Fila (Tarea)">
+                        <i data-lucide="plus"></i> <span>Insertar</span>
+                    </button>
+                    <button class="ribbon-btn-small" onclick="deleteSelectedRow()" title="Eliminar Fila Seleccionada">
+                        <i data-lucide="trash-2"></i> <span>Eliminar</span>
+                    </button>
+                    <button class="ribbon-btn-small" onclick="triggerUndo()" id="btn-ribbon-undo" title="Deshacer última acción (Ctrl+Z)" disabled style="opacity: 0.5;">
+                        <i data-lucide="undo"></i> <span>Deshacer</span>
+                    </button>
+                </div>
+                <span class="ribbon-group-label">Celdas</span>
+            </div>
+
+            <div class="ribbon-group">
+                <div class="ribbon-group-row">
+                    <button class="ribbon-btn-small" onclick="indentRow()" title="Aumentar Sangría (Subtarea)">
+                        <i data-lucide="indent-increase"></i> <span>Subtarea</span>
+                    </button>
+                    <button class="ribbon-btn-small" onclick="outdentRow()" title="Disminuir Sangría">
+                        <i data-lucide="indent-decrease"></i> <span>Padre</span>
+                    </button>
+                </div>
+                <span class="ribbon-group-label">Estructura</span>
+            </div>
+
+            <div class="ribbon-group">
+                <div class="ribbon-group-row">
+                    <button class="ribbon-btn-small" onclick="toggleCriticalPath()" id="btn-toggle-critical">
+                        <i data-lucide="activity"></i> <span>Ruta Crítica</span>
+                    </button>
+                    <button class="ribbon-btn-small" onclick="openDependencyFromRibbon()" title="Asistente de Dependencias">
+                        <i data-lucide="git-merge"></i> <span>Vincular</span>
+                    </button>
+                </div>
+                <span class="ribbon-group-label">Programación</span>
+            </div>
+
+            <div class="ribbon-group">
+                <div class="ribbon-group-row">
+                    <button class="ribbon-btn-small" onclick="generateShareUrl()">
+                        <i data-lucide="share-2"></i> <span>Compartir</span>
+                    </button>
+                    <button class="ribbon-btn-small" onclick="exportToPDF()">
+                        <i data-lucide="printer"></i> <span>PDF</span>
+                    </button>
+                </div>
+                <span class="ribbon-group-label">Enviar</span>
+            </div>
+        </div>
+
+        <!-- TAB BODY: FÓRMULAS -->
+        <div class="ribbon-body" id="ribbon-formulas">
+            <div class="ribbon-group">
+                <div class="ribbon-group-row">
+                    <button class="ribbon-btn-large" onclick="runSchedulingEngine()">
+                        <i data-lucide="play"></i>
+                        <span>Recalcular</span>
+                    </button>
+                </div>
+                <span class="ribbon-group-label">Motor de Cálculo</span>
+            </div>
+        </div>
+
+        <!-- TAB BODY: DATOS -->
+        <div class="ribbon-body" id="ribbon-data">
+            <div class="ribbon-group">
+                <div class="ribbon-group-row">
+                    <button class="ribbon-btn-small" onclick="toggleWeekendSolver()" id="btn-toggle-weekends">
+                        <i data-lucide="calendar"></i> <span id="weekends-btn-text">Días Hábiles</span>
+                    </button>
+                </div>
+                <span class="ribbon-group-label">Calendario</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- BARRA DE FÓRMULAS DE EXCEL (FORMULA BAR) -->
+    <div class="excel-formula-bar">
+        <div class="formula-cell-indicator" id="formula-cell-id">A1</div>
+        <div class="formula-fx-icon">fx</div>
+        <div class="formula-input-container">
+            <input type="text" id="formula-input-field" placeholder="Ingrese texto, fecha (YYYY-MM-DD), duración o fórmula (ej: =SUM(10, 20))" onkeydown="handleFormulaInput(event)" onfocus="onFormulaFocus()">
+        </div>
+    </div>
+
+    <!-- WORKSPACE PRINCIPAL -->
+    <main class="workspace-main">
+        
+        <!-- VISTA 1: DASHBOARD PROYECTOS -->
+        <div id="view-dashboard" class="view-pane active">
+            <div class="dashboard-container">
+                <div class="dashboard-header">
+                    <h2>Proyectos en la Nube</h2>
+                    <button class="btn-office primary" onclick="openCreateProjectModal()">Nuevo Proyecto</button>
+                </div>
+                
+                <div class="dashboard-grid" id="dashboard-projects-list">
+                    <!-- Dinámico -->
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA 2: GRID & TIMELINE (EXCEL SPREADSHEET LOOK) -->
+        <div id="view-workspace" class="view-pane">
+            <div class="workspace-split-pane" id="workspace-splitter-container">
+                
+                <!-- Panel Izquierdo: Rejilla de Excel -->
+                <div class="grid-panel" id="excel-grid-panel" onscroll="syncGridScroll()">
+                    <table class="excel-table" id="excel-sheet-table">
+                        <thead>
+                            <tr>
+                                <th class="excel-col-header" style="width:65px;">WBS</th>
+                                <th class="excel-col-header" style="width:220px;">Nombre</th>
+                                <th class="excel-col-header" style="width:95px;">Inicio</th>
+                                <th class="excel-col-header" style="width:95px;">Fin</th>
+                                <th class="excel-col-header" style="width:90px;">Duración</th>
+                                <th class="excel-col-header" style="width:115px;">Dependencias</th>
+                                <th class="excel-col-header" style="width:90px;">Progreso</th>
+                                <th class="excel-col-header" style="width:115px;">Responsable</th>
+                                <th class="excel-col-header" style="width:90px;">Riesgo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="excel-grid-body">
+                            <!-- Filas renderizadas dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Split Divider -->
+                <div class="split-handle" id="workspace-split-handle" onmousedown="initSplitDrag(event)"></div>
+
+                <!-- Panel Derecho: Gantt Timeline -->
+                <div class="gantt-panel" id="gantt-timeline-panel" onscroll="syncGanttScroll()">
+                    <div class="gantt-container" id="gantt-timeline-container">
+                        <!-- Cabecera de fechas Gantt -->
+                        <div class="gantt-header" id="gantt-timeline-header">
+                            <div class="gantt-header-row months" id="gantt-months-row"></div>
+                            <div class="gantt-header-row days" id="gantt-days-row"></div>
+                        </div>
+                        <!-- Filas de barras de Gantt y líneas SVG -->
+                        <div class="gantt-body" id="gantt-timeline-body">
+                            <svg class="gantt-svg-overlay" id="gantt-svg-overlay"></svg>
+                            <div id="gantt-rows-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTENEDOR DE TUTORIAL / GUÍA DE USO -->
+            <div id="workspace-tutorial-container" style="display: none; flex: 1; padding: 24px; overflow-y: auto; background-color: #ffffff; color: var(--text-dark); font-family: var(--font-sans);">
+                <div style="border-bottom: 2px solid var(--excel-green); padding-bottom: 12px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2 style="font-size: 20px; font-weight: 700; color: var(--excel-green-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
+                            <i data-lucide="book-open" style="width: 22px; height: 22px;"></i> Guía de Uso y Tutorial Interactivo
+                        </h2>
+                        <p style="font-size: 12px; color: var(--text-medium); margin-top: 4px; margin-bottom: 0;">Aprende a dominar las funciones de programación avanzadas de la plataforma estilo Excel.</p>
+                    </div>
+                    <button class="btn-office primary" onclick="switchSheet('gantt')">Volver al Gráfico Gantt</button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+                    
+                    <!-- Tarjeta 1 -->
+                    <div style="border: 1px solid var(--border-color); border-radius: 4px; padding: 18px; background-color: var(--excel-green-soft); box-shadow: var(--shadow-sm); position: relative;">
+                        <h3 style="font-size: 14px; font-weight: 700; color: var(--excel-green-dark); margin-top: 0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="indent-increase" style="width: 18px; height: 18px;"></i> 1. Estructura de Tareas (WBS)
+                        </h3>
+                        <p style="font-size: 11.5px; line-height: 1.5; color: var(--text-dark); margin-bottom: 10px;">
+                            La aplicación calcula de forma automática la jerarquía <strong>WBS (EDT)</strong> basándose en el nivel de sangría (Indent) de cada fila. Las tareas que tienen subtareas debajo de ellas se convierten automáticamente en <strong>Tareas Padre</strong>.
+                        </p>
+                        <ul style="font-size: 11px; padding-left: 18px; line-height: 1.5; color: var(--text-medium);">
+                            <li><strong>Subtarea (Sangría):</strong> Selecciona una fila y haz clic en <em>Inicio &rarr; Subtarea</em> para indentar la fila y convertirla en subtarea de la superior.</li>
+                            <li><strong>Padre (Reducir Sangría):</strong> Haz clic en <em>Inicio &rarr; Padre</em> para subir el nivel jerárquico.</li>
+                            <li><strong>Rollup automático:</strong> Las fechas de inicio, fin, progreso y duración de las tareas padre se calculan en base a sus tareas hijo.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Tarjeta 2 -->
+                    <div style="border: 1px solid var(--border-color); border-radius: 4px; padding: 18px; background-color: var(--bg-card); box-shadow: var(--shadow-sm);">
+                        <h3 style="font-size: 14px; font-weight: 700; color: var(--excel-green-dark); margin-top: 0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="git-merge" style="width: 18px; height: 18px;"></i> 2. Dependencias en Cascada
+                        </h3>
+                        <p style="font-size: 11.5px; line-height: 1.5; color: var(--text-dark); margin-bottom: 10px;">
+                            Para crear dependencias en cascada, escribe en la columna <strong>Dependencias</strong> utilizando la sintaxis de Project.
+                        </p>
+                        <table style="width: 100%; font-size: 10.5px; border-collapse: collapse; margin-top: 6px;">
+                            <thead>
+                                <tr style="background-color: var(--bg-light); border-bottom: 1px solid var(--border-color);">
+                                    <th style="padding: 4px; text-align: left;">Sintaxis</th>
+                                    <th style="padding: 4px; text-align: left;">Tipo de Relación</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid var(--bg-light);">
+                                    <td style="padding: 4px; font-family: var(--font-mono); font-weight: 600;">3FS</td>
+                                    <td style="padding: 4px; color: var(--text-medium);">Fin a Inicio. Comienza al terminar la tarea 3.</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--bg-light);">
+                                    <td style="padding: 4px; font-family: var(--font-mono); font-weight: 600;">4FS+2</td>
+                                    <td style="padding: 4px; color: var(--text-medium);">Fin a Inicio con 2 días de retardo (lag).</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--bg-light);">
+                                    <td style="padding: 4px; font-family: var(--font-mono); font-weight: 600;">6SS</td>
+                                    <td style="padding: 4px; color: var(--text-medium);">Inicio a Inicio. Inicia en paralelo con la 6.</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--bg-light);">
+                                    <td style="padding: 4px; font-family: var(--font-mono); font-weight: 600;">5FF</td>
+                                    <td style="padding: 4px; color: var(--text-medium);">Fin a Fin. Finaliza en sincronía con la 5.</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--bg-light);">
+                                    <td style="padding: 4px; font-family: var(--font-mono); font-weight: 600;">10FF,11FF</td>
+                                    <td style="padding: 4px; color: var(--text-medium);">Múltiples dependencias (separadas por coma).</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Tarjeta 3 -->
+                    <div style="border: 1px solid var(--border-color); border-radius: 4px; padding: 18px; background-color: var(--bg-card); box-shadow: var(--shadow-sm);">
+                        <h3 style="font-size: 14px; font-weight: 700; color: var(--excel-green-dark); margin-top: 0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="activity" style="width: 18px; height: 18px;"></i> 3. Ruta Crítica (Critical Path)
+                        </h3>
+                        <p style="font-size: 11.5px; line-height: 1.5; color: var(--text-dark); margin-bottom: 10px;">
+                            La <strong>Ruta Crítica</strong> representa el camino de tareas secuenciales que determina la duración total del proyecto. Cualquier retraso en estas tareas demorará la entrega del proyecto.
+                        </p>
+                        <ul style="font-size: 11px; padding-left: 18px; line-height: 1.5; color: var(--text-medium);">
+                            <li>Haz clic en <strong>Ruta Crítica</strong> en la barra de herramientas (Ribbon Inicio) para habilitar el cálculo.</li>
+                            <li>Las tareas de la ruta crítica (con holgura &le; 0) se pintarán automáticamente en <strong>color rojo</strong>.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Tarjeta 4 -->
+                    <div style="border: 1px solid var(--border-color); border-radius: 4px; padding: 18px; background-color: var(--bg-card); box-shadow: var(--shadow-sm);">
+                        <h3 style="font-size: 14px; font-weight: 700; color: var(--excel-green-dark); margin-top: 0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="calendar" style="width: 18px; height: 18px;"></i> 4. Fines de Semana e Hitos
+                        </h3>
+                        <p style="font-size: 11.5px; line-height: 1.5; color: var(--text-dark); margin-bottom: 10px;">
+                            Configura cómo el motor de programación gestiona las fechas del proyecto.
+                        </p>
+                        <ul style="font-size: 11px; padding-left: 18px; line-height: 1.5; color: var(--text-medium); margin-bottom: 8px;">
+                            <li><strong>Días Hábiles vs Naturales:</strong> Activa o desactiva la exclusión de fines de semana en la pestaña <em>Datos &rarr; Días Hábiles</em>. Al activarlo, el motor no programará tareas en sábado o domingo y las ignorará al calcular duraciones.</li>
+                            <li><strong>Hitos (Milestones):</strong> Crea un hito ingresando una duración de <code>0</code> días. Se renderizará en el timeline Gantt como un rombo negro.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Tarjeta 5 -->
+                    <div style="border: 1px solid var(--border-color); border-radius: 4px; padding: 18px; background-color: var(--bg-card); box-shadow: var(--shadow-sm);">
+                        <h3 style="font-size: 14px; font-weight: 700; color: var(--excel-green-dark); margin-top: 0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="table-2" style="width: 18px; height: 18px;"></i> 5. Barra de Fórmulas y Edición
+                        </h3>
+                        <p style="font-size: 11.5px; line-height: 1.5; color: var(--text-dark); margin-bottom: 10px;">
+                            Dispones de múltiples vías para editar los datos de las tareas en tiempo real.
+                        </p>
+                        <ul style="font-size: 11px; padding-left: 18px; line-height: 1.5; color: var(--text-medium);">
+                            <li><strong>Edición Directa:</strong> Haz doble clic sobre cualquier celda de datos para abrir el editor de celdas integrado. Presiona <em>Enter</em> para guardar o <em>Esc</em> para cancelar.</li>
+                            <li><strong>Barra de Fórmulas fx:</strong> Selecciona una celda y escribe directamente en la barra superior.</li>
+                            <li><strong>Fórmulas de Excel:</strong> Puedes ingresar fórmulas como <code>=SUM(10, 5)</code> o <code>=AVERAGE(80, 90)</code> en celdas de duración o progreso para que el motor las evalúe dinámicamente al presionar <em>Enter</em>.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Tarjeta 6 -->
+                    <div style="border: 1px solid var(--border-color); border-radius: 4px; padding: 18px; background-color: var(--excel-green-soft); box-shadow: var(--shadow-sm);">
+                        <h3 style="font-size: 14px; font-weight: 700; color: var(--excel-green-dark); margin-top: 0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="file-spreadsheet" style="width: 18px; height: 18px;"></i> 6. Importar / Exportar XLSX
+                        </h3>
+                        <p style="font-size: 11.5px; line-height: 1.5; color: var(--text-dark); margin-bottom: 10px;">
+                            Sincroniza tus proyectos con herramientas de escritorio locales de forma bidireccional.
+                        </p>
+                        <ul style="font-size: 11px; padding-left: 18px; line-height: 1.5; color: var(--text-medium);">
+                            <li><strong>Exportar a Excel:</strong> En la pestaña <em>Archivo</em> del Ribbon, presiona <strong>Descargar</strong>. Se generará un archivo XLSX real con tus tareas estructuradas.</li>
+                            <li><strong>Importar de Excel:</strong> Modifica el archivo en Excel local respetando las columnas, y súbelo usando el botón <strong>Importar</strong>. El motor procesará las fechas, recalculará dependencias y guardará los cambios en la nube.</li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- PEESTAÑAS DE HOJAS (SHEET TABS) -->
+    <div class="excel-sheet-tabs-container">
+        <div class="tabs-left">
+            <div class="sheet-tab" id="sheet-tab-dashboard" onclick="switchView('dashboard')">Proyectos</div>
+            <div class="sheet-tab active" id="sheet-tab-gantt" onclick="switchSheet('gantt')">Gantt Chart</div>
+            <div class="sheet-tab" id="sheet-tab-tutorial" onclick="switchSheet('tutorial')">Guía de Uso (Tutorial)</div>
+        </div>
+        <div class="tabs-right" style="font-size:11px; color:var(--text-medium); font-weight:500;">
+            Teclado habilitado
+        </div>
+    </div>
+
+    <!-- BARRA DE ESTADO DE EXCEL (STATUS BAR) -->
+    <footer class="excel-status-bar">
+        <div class="status-left">
+            <span>Listo</span>
+            <span>|</span>
+            <span id="excel-status-mode">Editor local activo</span>
+        </div>
+        <div class="status-right" id="excel-grid-statistics" style="display: none;">
+            <span>Promedio: <strong id="stat-avg">0</strong></span>
+            <span>Recuento: <strong id="stat-count">0</strong></span>
+            <span>Suma: <strong id="stat-sum">0</strong></span>
+        </div>
+    </footer>
+
+    <!-- MODAL CREAR PROYECTO -->
+    <div id="create-project-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Crear Nuevo Proyecto</h3>
+                <button class="btn-office" onclick="closeCreateProjectModal()"><i data-lucide="x" style="width: 12px; height: 12px;"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="new-project-name">Nombre del Proyecto</label>
+                    <input type="text" id="new-project-name" placeholder="Ej: Cronograma_Proyecto.xlsx">
+                </div>
+                <div class="form-group">
+                    <label for="new-project-start">Fecha de Inicio de Rejilla</label>
+                    <input type="date" id="new-project-start">
+                </div>
+                <div class="form-group">
+                    <label for="new-project-template">Plantilla de Datos</label>
+                    <select id="new-project-template">
+                        <option value="empty">Proyecto en blanco</option>
+                        <option value="software">Desarrollo de Software Integrado</option>
+                        <option value="construction">Construcción y Logística Civil</option>
+                        <option value="megaproject">Mega-Proyecto de 3 Años (Infraestructura)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-office" onclick="closeCreateProjectModal()">Cancelar</button>
+                <button class="btn-office primary" onclick="submitCreateProject()">Crear Proyecto</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ASISTENTE DE DEPENDENCIAS -->
+    <div id="dependency-helper-modal" class="modal-overlay">
+        <div class="modal-card" style="width: 500px;">
+            <div class="modal-header">
+                <h3>Asistente de Dependencias (Vinculador)</h3>
+                <button class="btn-office" onclick="closeDependencyHelperModal()"><i data-lucide="x" style="width: 12px; height: 12px;"></i></button>
+            </div>
+            <div class="modal-body" style="font-family: var(--font-sans);">
+                <div style="background-color: var(--excel-green-soft); padding: 10px; border-radius: 4px; border-left: 4px solid var(--excel-green); font-size: 11px; color: var(--excel-green-dark); margin-bottom: 12px;">
+                    Configura las relaciones para la tarea: <strong id="dep-helper-current-task-name">-</strong>
+                </div>
+
+                <!-- FORMULARIO AGREGAR NUEVA DEPENDENCIA -->
+                <div style="border: 1px solid var(--border-color); padding: 12px; border-radius: 4px; background-color: #faf9f8; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                    <div style="font-size: 11px; font-weight: 700; color: var(--text-dark);">Vincular con una Tarea Predecesora:</div>
+                    
+                    <div class="form-group">
+                        <label for="dep-helper-predecessor-select">Tarea Predecesora</label>
+                        <select id="dep-helper-predecessor-select" style="width: 100%; padding: 4px; font-size: 12px; border: 1px solid var(--border-color);"></select>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 10px;">
+                        <div class="form-group">
+                            <label for="dep-helper-type-select">Relación / Tipo</label>
+                            <select id="dep-helper-type-select" style="width: 100%; padding: 4px; font-size: 12px; border: 1px solid var(--border-color);">
+                                <option value="FS">Fin a Inicio (FS) - Pred. termina, esta inicia</option>
+                                <option value="SS">Inicio a Inicio (SS) - Inician en paralelo</option>
+                                <option value="FF">Fin a Fin (FF) - Terminan al mismo tiempo</option>
+                                <option value="SF">Inicio a Fin (SF)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="dep-helper-lag-input">Retardo (Días + / -)</label>
+                            <input type="number" id="dep-helper-lag-input" value="0" placeholder="Ej: 2, -1" style="width: 100%; padding: 4px; font-size: 12px; border: 1px solid var(--border-color);">
+                        </div>
+                    </div>
+
+                    <button class="btn-office primary" onclick="addDependencyToTempList()" style="align-self: flex-end; padding: 4px 12px; margin-top: 5px;">
+                        Agregar Vínculo
+                    </button>
+                </div>
+
+                <!-- LISTA DE DEPENDENCIAS ACTUALES -->
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <div style="font-size: 11px; font-weight: 700; color: var(--text-dark);">Vínculos Activos para esta Tarea:</div>
+                    <div style="max-height: 120px; overflow-y: auto; border: 1px solid var(--border-color); background-color: #ffffff;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px;" id="dep-helper-active-table">
+                            <thead>
+                                <tr style="background-color: #f3f2f1; border-bottom: 1px solid var(--border-color);">
+                                    <th style="padding: 6px; text-align: left; font-weight: 600;">Predecesora</th>
+                                    <th style="padding: 6px; text-align: center; font-weight: 600;">Tipo</th>
+                                    <th style="padding: 6px; text-align: right; font-weight: 600;">Retardo</th>
+                                    <th style="padding: 6px; text-align: center; font-weight: 600;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dep-helper-active-tbody">
+                                <!-- Filas dinámicas -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-office" onclick="closeDependencyHelperModal()">Cancelar</button>
+                <button class="btn-office primary" onclick="saveDependencyHelper()">Aplicar y Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ==========================================================================
+           LÓGICA DEL CLIENTE & CONEXIÓN DE API SAAS
+           ========================================================================== */
+        let activeProject = {
+            id: "",
+            name: "",
+            start: "",
+            status: "",
+            excludeWeekends: true,
+            tasks: []
+        };
+        
+        let projects = [];
+        let selectedCell = { rowId: null, colKey: null };
+        let showCriticalPath = false;
+        let isSplitDragging = false;
+        let ganttScale = 22; // Escala diaria en pixeles
+        let isGanttFitToScreen = false;
+        let isGanttFullscreen = false;
+        let originalGridWidth = "50%";
+
+        // Validar token de autenticación
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+
+        // Obtener perfil actual
+        async function fetchUserProfile() {
+            try {
+                const res = await fetch('/api/auth/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) {
+                    logoutUser();
+                    return;
+                }
+                const user = await res.json();
+                
+                // Si el usuario no tiene licencia activa, forzar redirección de seguridad a activación
+                if (!user.licenseActive) {
+                    localStorage.setItem('licenseActive', 'false');
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                localStorage.setItem('licenseActive', 'true');
+                document.getElementById('user-email-display').textContent = user.email;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Cargar proyectos del dashboard
+        async function loadProjectsList() {
+            try {
+                const res = await fetch('/api/projects', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) return;
+                projects = await res.json();
+                renderDashboardProjects();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderDashboardProjects() {
+            const listContainer = document.getElementById("dashboard-projects-list");
+            listContainer.innerHTML = "";
+
+            if (projects.length === 0) {
+                listContainer.innerHTML = `
+                    <div style="grid-column: 1/-1; padding: 40px; text-align: center; border: 1px dashed var(--border-color); color: var(--text-muted); font-size:13px;">
+                        No tienes proyectos creados. Presiona "Nuevo Proyecto" para comenzar.
+                    </div>
+                `;
+                return;
+            }
+
+            projects.forEach(proj => {
+                const card = document.createElement("div");
+                card.className = "project-card";
+                card.onclick = () => loadProjectWorkspace(proj.id);
+
+                card.innerHTML = `
+                    <div class="project-card-title">${proj.name}</div>
+                    <div class="project-card-meta">Fecha Inicio: ${proj.start} | Estado: ${proj.status}</div>
+                    <div class="project-card-progress">
+                        <div class="project-card-progress-bar" style="width: 100%;"></div>
+                    </div>
+                    <div class="project-card-footer">
+                        <span>${proj.tasks_count || 0} Tareas programadas</span>
+                        <span>Abrir &rarr;</span>
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        async function loadProjectWorkspace(projectId) {
+            try {
+                const res = await fetch(`/api/projects/${projectId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) return;
+                activeProject = await res.json();
+                
+                document.getElementById("excel-app-title").textContent = `Bronze Gantt Pro - ${activeProject.name}`;
+                document.getElementById("weekends-btn-text").textContent = activeProject.excludeWeekends ? "Días Hábiles" : "Días Naturales";
+
+                // Ejecutar motor de programación e ir a Workspace
+                runSchedulingEngine();
+                switchView('workspace');
+                switchSheet('gantt');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function saveProjectToServer() {
+            if (!activeProject.id) return;
+            try {
+                const res = await fetch('/api/projects', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(activeProject)
+                });
+                if (res.ok) {
+                    console.log('Proyecto guardado en la nube.');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        /* ==========================================================================
+           MOTOR DE PROGRAMACIÓN (SCHEDULER ENGINE)
+           ========================================================================== */
+        
+        function parseDateString(str) {
+            if (!str) return new Date();
+            const parts = str.split('-');
+            return new Date(parts[0], parts[1] - 1, parts[2]);
+        }
+
+        function formatDateString(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function isWeekend(date) {
+            const day = date.getDay();
+            return day === 0 || day === 6;
+        }
+
+        function addDays(date, days, excludeWeekends = true) {
+            let result = new Date(date.getTime());
+            if (days === 0) return result;
+
+            let added = 0;
+            const step = days > 0 ? 1 : -1;
+            const target = Math.abs(days);
+
+            while (added < target) {
+                result.setDate(result.getDate() + step);
+                if (!excludeWeekends || !isWeekend(result)) {
+                    added++;
+                }
+            }
+            return result;
+        }
+
+        function getDaysDifference(start, end, excludeWeekends = true) {
+            const s = new Date(start.getTime());
+            const e = new Date(end.getTime());
+            if (s > e) return 0;
+
+            let count = 0;
+            let current = s;
+            while (current < e) {
+                if (!excludeWeekends || !isWeekend(current)) {
+                    count++;
+                }
+                current.setDate(current.getDate() + 1);
+            }
+            return count;
+        }
+
+        function parseDependency(depStr) {
+            if (!depStr || typeof depStr !== 'string') return null;
+            const match = depStr.trim().toUpperCase().match(/^(\d+)(FS|SS|FF|SF)?(?:([+-]\d+))?$/);
+            if (!match) return null;
+
+            return {
+                predecessorId: parseInt(match[1]),
+                type: match[2] || "FS",
+                lag: match[3] ? parseInt(match[3]) : 0
+            };
+        }
+
+        function runSchedulingEngine() {
+            const tasks = activeProject.tasks;
+            const excludeW = activeProject.excludeWeekends;
+
+            tasks.forEach(t => {
+                t.isCritical = false;
+                t.slack = 0;
+                t.es = null; t.ef = null; t.ls = null; t.lf = null;
+            });
+
+            resolveWBSHierarchy(tasks);
+
+            let maxIterations = 100;
+            let changesOccurred = true;
+            let iterations = 0;
+
+            while (changesOccurred && iterations < maxIterations) {
+                changesOccurred = false;
+                iterations++;
+
+                for (let i = 0; i < tasks.length; i++) {
+                    const task = tasks[i];
+                    if (isParentRow(tasks, i)) continue;
+
+                    if (task.dependencies) {
+                        const depList = task.dependencies.split(',').map(d => parseDependency(d)).filter(Boolean);
+                        
+                        let earliestStart = null;
+                        let earliestEnd = null;
+
+                        depList.forEach(dep => {
+                            const pred = tasks.find(t => t.id === dep.predecessorId);
+                            if (!pred) return;
+
+                            const pStart = parseDateString(pred.start);
+                            const pEnd = parseDateString(pred.end);
+                            
+                            let calcStart = null;
+                            let calcEnd = null;
+
+                            if (dep.type === "FS") {
+                                calcStart = addDays(pEnd, dep.lag, excludeW);
+                            } else if (dep.type === "SS") {
+                                calcStart = addDays(pStart, dep.lag, excludeW);
+                            } else if (dep.type === "FF") {
+                                calcEnd = addDays(pEnd, dep.lag, excludeW);
+                            } else if (dep.type === "SF") {
+                                calcEnd = addDays(pStart, dep.lag, excludeW);
+                            }
+
+                            if (calcStart && (!earliestStart || calcStart > earliestStart)) earliestStart = calcStart;
+                            if (calcEnd && (!earliestEnd || calcEnd > earliestEnd)) earliestEnd = calcEnd;
+                        });
+
+                        if (earliestStart) {
+                            const currentStart = parseDateString(task.start);
+                            if (formatDateString(currentStart) !== formatDateString(earliestStart)) {
+                                task.start = formatDateString(earliestStart);
+                                task.end = formatDateString(addDays(earliestStart, task.duration, excludeW));
+                                changesOccurred = true;
+                            }
+                        }
+                        if (earliestEnd) {
+                            const currentEnd = parseDateString(task.end);
+                            if (formatDateString(currentEnd) !== formatDateString(earliestEnd)) {
+                                task.end = formatDateString(earliestEnd);
+                                task.start = formatDateString(addDays(earliestEnd, -task.duration, excludeW));
+                                changesOccurred = true;
+                            }
+                        }
+                    }
+                }
+
+                const hierarchyChanged = resolveWBSHierarchy(tasks);
+                if (hierarchyChanged) changesOccurred = true;
+            }
+
+            if (showCriticalPath) {
+                calculateCriticalPath(tasks, excludeW);
+            }
+
+            saveProjectToServer();
+        }
+
+        function isParentRow(tasks, index) {
+            if (index >= tasks.length - 1) return false;
+            return tasks[index + 1].indent > tasks[index].indent;
+        }
+
+        function resolveWBSHierarchy(tasks) {
+            let changed = false;
+            
+            for (let i = tasks.length - 1; i >= 0; i--) {
+                const task = tasks[i];
+                const isParent = isParentRow(tasks, i);
+
+                if (isParent) {
+                    let children = [];
+                    for (let j = i + 1; j < tasks.length; j++) {
+                        if (tasks[j].indent <= task.indent) break;
+                        children.push(tasks[j]);
+                    }
+
+                    if (children.length > 0) {
+                        const leafChildren = children.filter(c => !isParentRow(children, children.indexOf(c)));
+                        const activeChildren = leafChildren.length > 0 ? leafChildren : children;
+
+                        let minStart = null;
+                        let maxEnd = null;
+                        let sumProgress = 0;
+
+                        activeChildren.forEach(c => {
+                            const cStart = parseDateString(c.start);
+                            const cEnd = parseDateString(c.end);
+                            if (!minStart || cStart < minStart) minStart = cStart;
+                            if (!maxEnd || cEnd > maxEnd) maxEnd = cEnd;
+                            sumProgress += c.progress || 0;
+                        });
+
+                        const avgProgress = Math.round(sumProgress / activeChildren.length);
+                        const newStartStr = formatDateString(minStart);
+                        const newEndStr = formatDateString(maxEnd);
+                        const newDuration = getDaysDifference(minStart, maxEnd, activeProject.excludeWeekends);
+
+                        if (task.start !== newStartStr || task.end !== newEndStr || task.progress !== avgProgress) {
+                            task.start = newStartStr;
+                            task.end = newEndStr;
+                            task.duration = newDuration;
+                            task.progress = avgProgress;
+                            changed = true;
+                        }
+                    }
+                }
+            }
+            return changed;
+        }
+
+        function calculateCriticalPath(tasks, excludeW) {
+            if (tasks.length === 0) return;
+
+            const nodes = tasks.map(t => ({
+                id: t.id,
+                duration: t.duration,
+                taskRef: t,
+                predecessors: [],
+                successors: []
+            }));
+
+            nodes.forEach(node => {
+                const deps = node.taskRef.dependencies;
+                if (deps) {
+                    deps.split(',').forEach(d => {
+                        const parsed = parseDependency(d);
+                        if (parsed) {
+                            const pred = nodes.find(n => n.id === parsed.predecessorId);
+                            if (pred) {
+                                node.predecessors.push(pred);
+                                pred.successors.push(node);
+                            }
+                        }
+                    });
+                }
+            });
+
+            let queue = nodes.filter(n => n.predecessors.length === 0);
+            nodes.forEach(n => {
+                n.es = 0;
+                n.ef = n.duration;
+            });
+
+            let visited = new Set();
+            while (queue.length > 0) {
+                const current = queue.shift();
+                visited.add(current.id);
+
+                current.ef = current.es + current.duration;
+
+                current.successors.forEach(succ => {
+                    succ.es = Math.max(succ.es, current.ef);
+                    if (!visited.has(succ.id)) queue.push(succ);
+                });
+            }
+
+            const maxEF = Math.max(...nodes.map(n => n.ef));
+
+            nodes.forEach(n => {
+                n.lf = maxEF;
+                n.ls = maxEF - n.duration;
+            });
+
+            queue = nodes.filter(n => n.successors.length === 0);
+            visited.clear();
+
+            while (queue.length > 0) {
+                const current = queue.shift();
+                visited.add(current.id);
+
+                current.ls = current.lf - current.duration;
+
+                current.predecessors.forEach(pred => {
+                    pred.lf = Math.min(pred.lf, current.ls);
+                    if (!visited.has(pred.id)) queue.push(pred);
+                });
+            }
+
+            nodes.forEach(n => {
+                const slack = n.lf - n.ef;
+                n.taskRef.slack = slack;
+                if (slack <= 0 && n.duration > 0) {
+                    n.taskRef.isCritical = true;
+                }
+            });
+        }
+
+        /* ==========================================================================
+           COMPONENTE: CUADRÍCULA EXCEL (GRID INTERACTIVO)
+           ========================================================================== */
+        function renderExcelGrid() {
+            const body = document.getElementById("excel-grid-body");
+            body.innerHTML = "";
+
+            activeProject.tasks.forEach((task, index) => {
+                const tr = document.createElement("tr");
+                tr.dataset.index = index;
+                tr.dataset.id = task.id;
+
+                if (isParentRow(activeProject.tasks, index)) {
+                    tr.classList.add("parent-row");
+                }
+
+
+
+                // Columna A: WBS
+                const tdWbs = document.createElement("td");
+                tdWbs.className = "excel-cell col-wbs";
+                tdWbs.textContent = calculateWBSLabel(activeProject.tasks, index);
+                tr.appendChild(tdWbs);
+
+                // Columnas de datos
+                const colConfigs = [
+                    { key: "name", class: "col-name indent-" + task.indent },
+                    { key: "start", class: "col-start" },
+                    { key: "end", class: "col-end" },
+                    { key: "duration", class: "col-duration" },
+                    { key: "dependencies", class: "col-dependencies" },
+                    { key: "progress", class: "col-progress" },
+                    { key: "owner", class: "col-owner" },
+                    { key: "risk", class: "col-risk" }
+                ];
+
+                colConfigs.forEach(col => {
+                    const td = document.createElement("td");
+                    td.className = `excel-cell ${col.class}`;
+                    td.dataset.col = col.key;
+                    
+                    if (col.key === "risk") {
+                        const riskVal = task[col.key] || "Low";
+                        td.innerHTML = `<span class="risk-pill risk-${riskVal.toLowerCase()}">${riskVal}</span>`;
+                    } else if (col.key === "progress") {
+                        td.textContent = (task[col.key] || 0) + "%";
+                    } else {
+                        td.textContent = task[col.key] || "";
+                    }
+
+                    td.onclick = () => selectExcelCell(td, task.id, col.key);
+                    td.ondblclick = () => {
+                        if (col.key === "dependencies") {
+                            openDependencyHelperModal(task.id);
+                        } else {
+                            editExcelCell(td, task.id, col.key);
+                        }
+                    };
+
+                    if (col.key === "dependencies") {
+                        td.onmouseenter = (e) => {
+                            const val = task[col.key];
+                            if (val && val.trim()) {
+                                showDependencyTooltip(val, e);
+                            }
+                        };
+                        td.onmousemove = (e) => {
+                            moveDependencyTooltip(e);
+                        };
+                        td.onmouseleave = () => {
+                            hideDependencyTooltip();
+                        };
+                    }
+
+                    tr.appendChild(td);
+                });
+
+                body.appendChild(tr);
+            });
+        }
+
+        function calculateWBSLabel(tasks, index) {
+            let levels = [0];
+            let currentIndent = 0;
+
+            for (let i = 0; i <= index; i++) {
+                const t = tasks[i];
+                if (t.indent > currentIndent) {
+                    levels.push(1);
+                    currentIndent = t.indent;
+                } else if (t.indent < currentIndent) {
+                    while (levels.length > t.indent + 1) {
+                        levels.pop();
+                    }
+                    levels[levels.length - 1]++;
+                    currentIndent = t.indent;
+                } else {
+                    levels[levels.length - 1]++;
+                }
+            }
+            return levels.join(".");
+        }
+
+        function selectExcelCell(tdElement, taskId, colKey) {
+            const prevSelected = document.querySelector(".excel-cell.selected");
+            if (prevSelected) prevSelected.classList.remove("selected");
+
+            tdElement.classList.add("selected");
+            selectedCell = { rowId: taskId, colKey: colKey };
+
+            updateExcelHeaderHighlights(tdElement);
+
+            const task = activeProject.tasks.find(t => t.id === taskId);
+            const inputField = document.getElementById("formula-input-field");
+            
+            const cellRef = getExcelCellReference(activeProject.tasks.indexOf(task), colKey);
+            document.getElementById("formula-cell-id").textContent = cellRef;
+
+            if (task) {
+                inputField.value = task[colKey] !== undefined ? task[colKey] : "";
+            }
+
+            // Resaltar líneas de dependencias correspondientes en la gráfica Gantt
+            document.querySelectorAll(".dep-line").forEach(l => l.classList.remove("highlighted"));
+            document.querySelectorAll(".dep-arrow").forEach(a => a.classList.remove("highlighted"));
+            if (colKey === "dependencies") {
+                document.querySelectorAll(`.dep-line[data-to-task-id="${taskId}"]`).forEach(l => l.classList.add("highlighted"));
+                document.querySelectorAll(`.dep-arrow[data-to-task-id="${taskId}"]`).forEach(a => a.classList.add("highlighted"));
+            }
+
+            // Actualizar estadísticas de Excel
+            updateGridStatistics();
+        }
+
+        function getExcelCellReference(rowIndex, colKey) {
+            const cols = ["B", "C", "D", "E", "F", "G", "H", "I"]; // Columnas de datos de Excel
+            const colIndex = ["name", "start", "end", "duration", "dependencies", "progress", "owner", "risk"].indexOf(colKey);
+            const colLetter = cols[colIndex] || "A";
+            return `${colLetter}${rowIndex + 2}`;
+        }
+
+        function updateExcelHeaderHighlights(tdElement) {
+            document.querySelectorAll(".excel-col-header").forEach(h => h.classList.remove("active"));
+            document.querySelectorAll(".excel-row-header").forEach(h => h.classList.remove("active"));
+
+            const tr = tdElement.parentElement;
+            const rowIndex = tr.querySelector(".excel-row-header");
+            if (rowIndex) rowIndex.classList.add("active");
+
+            const cells = Array.from(tr.children);
+            const colIndex = cells.indexOf(tdElement);
+            const colHeader = document.querySelectorAll(".excel-col-header")[colIndex];
+            if (colHeader) colHeader.classList.add("active");
+        }
+
+        function editExcelCell(tdElement, taskId, colKey) {
+            if (tdElement.classList.contains("editing")) return;
+            tdElement.classList.add("editing");
+
+            const task = activeProject.tasks.find(t => t.id === taskId);
+            const currentValue = task ? (task[colKey] !== undefined ? task[colKey] : "") : "";
+
+            const input = document.createElement("input");
+            input.type = "text";
+            input.value = currentValue;
+            tdElement.textContent = "";
+            tdElement.appendChild(input);
+            input.focus();
+
+            input.onblur = () => saveInlineEdit(input.value, taskId, colKey, tdElement);
+            input.onkeydown = (e) => {
+                if (e.key === "Enter") input.blur();
+                if (e.key === "Escape") renderExcelGrid();
+            };
+        }
+
+        function saveInlineEdit(newValue, taskId, colKey, tdElement) {
+            const task = activeProject.tasks.find(t => t.id === taskId);
+
+            if (task) {
+                const oldVal = task[colKey];
+                const cleanOld = oldVal !== undefined ? oldVal.toString() : "";
+                const cleanNew = newValue !== undefined ? newValue.toString() : "";
+                if (cleanOld !== cleanNew) {
+                    pushUndoState();
+                }
+
+                if (colKey === "duration" || colKey === "progress") {
+                    const parsedNum = parseInt(newValue);
+                    task[colKey] = isNaN(parsedNum) ? 0 : parsedNum;
+                } else if (colKey === "start" || colKey === "end") {
+                    task[colKey] = newValue;
+                    if (task.start && task.end) {
+                        task.duration = getDaysDifference(parseDateString(task.start), parseDateString(task.end), activeProject.excludeWeekends);
+                    }
+                } else {
+                    task[colKey] = newValue;
+                }
+
+                if (colKey === "duration" && task.start) {
+                    task.end = formatDateString(addDays(parseDateString(task.start), task.duration, activeProject.excludeWeekends));
+                }
+            }
+
+            tdElement.classList.remove("editing");
+            runSchedulingEngine();
+            renderExcelGrid();
+            renderGanttTimeline();
+        }
+
+        function handleFormulaInput(event) {
+            if (event.key === "Enter") {
+                const inputField = document.getElementById("formula-input-field");
+                const val = inputField.value;
+
+                if (selectedCell.rowId && selectedCell.colKey) {
+                    const task = activeProject.tasks.find(t => t.id === selectedCell.rowId);
+                    
+                    if (task) {
+                        const oldVal = task[selectedCell.colKey];
+                        const cleanOld = oldVal !== undefined ? oldVal.toString() : "";
+                        if (cleanOld !== val) {
+                            pushUndoState();
+                        }
+
+                        if (val.startsWith("=")) {
+                            task[selectedCell.colKey] = evaluateExcelFormula(val);
+                        } else {
+                            if (selectedCell.colKey === "duration" || selectedCell.colKey === "progress") {
+                                const parsedNum = parseInt(val);
+                                task[selectedCell.colKey] = isNaN(parsedNum) ? 0 : parsedNum;
+                            } else {
+                                task[selectedCell.colKey] = val;
+                            }
+                        }
+
+                        if (selectedCell.colKey === "duration" && task.start) {
+                            task.end = formatDateString(addDays(parseDateString(task.start), task.duration, activeProject.excludeWeekends));
+                        } else if (selectedCell.colKey === "start" && task.duration) {
+                            task.end = formatDateString(addDays(parseDateString(task.start), task.duration, activeProject.excludeWeekends));
+                        }
+                    }
+
+                    runSchedulingEngine();
+                    renderExcelGrid();
+                    renderGanttTimeline();
+                    inputField.blur();
+                }
+            }
+        }
+
+        function onFormulaFocus() {
+            if (!selectedCell.rowId) {
+                const firstCell = document.querySelector(".excel-cell:not(.col-wbs)");
+                if (firstCell) firstCell.click();
+            }
+        }
+
+        function evaluateExcelFormula(formulaStr) {
+            try {
+                const clean = formulaStr.substring(1).toUpperCase().trim();
+                
+                // SUM
+                const sumMatch = clean.match(/^SUM\((.+)\)$/);
+                if (sumMatch) {
+                    const parts = sumMatch[1].split(',').map(p => parseFloat(p.trim())).filter(p => !isNaN(p));
+                    return parts.reduce((acc, curr) => acc + curr, 0);
+                }
+                
+                // AVERAGE
+                const avgMatch = clean.match(/^AVERAGE\((.+)\)$/);
+                if (avgMatch) {
+                    const parts = avgMatch[1].split(',').map(p => parseFloat(p.trim())).filter(p => !isNaN(p));
+                    return parts.length > 0 ? (parts.reduce((acc, curr) => acc + curr, 0) / parts.length) : 0;
+                }
+
+                // MIN
+                const minMatch = clean.match(/^MIN\((.+)\)$/);
+                if (minMatch) {
+                    const parts = minMatch[1].split(',').map(p => parseFloat(p.trim())).filter(p => !isNaN(p));
+                    return parts.length > 0 ? Math.min(...parts) : 0;
+                }
+
+                // MAX
+                const maxMatch = clean.match(/^MAX\((.+)\)$/);
+                if (maxMatch) {
+                    const parts = maxMatch[1].split(',').map(p => parseFloat(p.trim())).filter(p => !isNaN(p));
+                    return parts.length > 0 ? Math.max(...parts) : 0;
+                }
+
+                // COUNT
+                const countMatch = clean.match(/^COUNT\((.+)\)$/);
+                if (countMatch) {
+                    const parts = countMatch[1].split(',').map(p => parseFloat(p.trim())).filter(p => !isNaN(p));
+                    return parts.length;
+                }
+                
+                return formulaStr;
+            } catch (err) {
+                return "#VALUE!";
+            }
+        }
+
+        // Calcula estadísticas rápidas estilo Excel en la barra de estado inferior
+        function updateGridStatistics() {
+            const statsBar = document.getElementById("excel-grid-statistics");
+            
+            if (!selectedCell.rowId) {
+                statsBar.style.display = "none";
+                return;
+            }
+
+            const col = selectedCell.colKey;
+            
+            // Si es columna numérica (duración o progreso)
+            if (col === "duration" || col === "progress") {
+                const values = activeProject.tasks.map(t => parseInt(t[col])).filter(v => !isNaN(v));
+                if (values.length > 0) {
+                    const sum = values.reduce((a, b) => a + b, 0);
+                    const avg = Math.round((sum / values.length) * 10) / 10;
+                    const count = values.length;
+
+                    document.getElementById("stat-avg").textContent = avg;
+                    document.getElementById("stat-count").textContent = count;
+                    document.getElementById("stat-sum").textContent = sum;
+                    statsBar.style.display = "flex";
+                } else {
+                    statsBar.style.display = "none";
+                }
+            } else {
+                statsBar.style.display = "none";
+            }
+        }
+
+        function selectAllCells() {
+            alert("Proyecto completo seleccionado. Presione Ctrl+C para copiar datos.");
+        }
+
+
+        /* ==========================================================================
+           TIMELINE GANTT (SVG & DRAG AND DROP)
+           ========================================================================== */
+        
+        function renderGanttTimeline() {
+            const tasks = activeProject.tasks;
+            
+            const BRONZE_PALETTE = [
+                { bg: "#8c5b30", progress: "#5c3a1d" }, // Bronce Clásico
+                { bg: "#a67c52", progress: "#6f4e37" }, // Bronce Café
+                { bg: "#c99a49", progress: "#8c651e" }, // Bronce Dorado
+                { bg: "#b36b43", progress: "#7f4221" }, // Cobre / Cacao
+                { bg: "#b8860b", progress: "#7e5c00" }, // Ocre / Bronce Antiguo
+                { bg: "#a0522d", progress: "#6a3014" }, // Bronce Terracota
+                { bg: "#d2b48c", progress: "#9c7f56" }  // Bronce Arena
+            ];
+
+            let projectStart = parseDateString(activeProject.start);
+            let minDate = new Date(projectStart.getTime());
+            minDate.setDate(minDate.getDate() - 4);
+
+            let maxDate = new Date(minDate.getTime());
+            maxDate.setDate(maxDate.getDate() + 45);
+
+            tasks.forEach(t => {
+                if (t.end) {
+                    const dEnd = parseDateString(t.end);
+                    if (dEnd > maxDate) {
+                        maxDate = new Date(dEnd.getTime());
+                        maxDate.setDate(maxDate.getDate() + 8);
+                    }
+                }
+            });
+
+            const totalDays = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24));
+            
+            // ESCALA AJUSTADA PARA PANTALLA COMPLETA
+            if (isGanttFitToScreen) {
+                const panelWidth = document.getElementById("gantt-timeline-panel").clientWidth;
+                // Dejar un margen de seguridad de 60px y calcular escala por día (mínimo 2px para soportar proyectos largos de un año o más)
+                ganttScale = Math.max(2, (panelWidth - 65) / totalDays);
+            }
+
+            renderCalendarHeader(minDate, maxDate);
+
+            const totalWidth = totalDays * ganttScale;
+            document.getElementById("gantt-timeline-container").style.width = `${totalWidth}px`;
+
+            const rowsContainer = document.getElementById("gantt-rows-container");
+            rowsContainer.innerHTML = "";
+
+            let currentPhaseIndex = -1;
+
+            tasks.forEach((task, index) => {
+                if (task.indent === 0) {
+                    currentPhaseIndex++;
+                }
+                const colorIndex = Math.max(0, currentPhaseIndex) % BRONZE_PALETTE.length;
+                const colors = BRONZE_PALETTE[colorIndex];
+
+                const row = document.createElement("div");
+                row.className = "gantt-row";
+                row.dataset.id = task.id;
+
+                for (let d = 0; d < totalDays; d++) {
+                    const cellDate = new Date(minDate.getTime());
+                    cellDate.setDate(cellDate.getDate() + d);
+
+                    const cell = document.createElement("div");
+                    cell.className = "gantt-grid-cell";
+                    cell.style.width = `${ganttScale}px`;
+                    if (isWeekend(cellDate)) {
+                        cell.classList.add("weekend");
+                    }
+                    row.appendChild(cell);
+                }
+
+                if (task.start && task.end) {
+                    const tStart = parseDateString(task.start);
+                    const tEnd = parseDateString(task.end);
+                    
+                    const leftOffset = getDaysDifference(minDate, tStart, false) * ganttScale;
+                    let widthDays = getDaysDifference(tStart, tEnd, false);
+                    if (task.duration === 0) widthDays = 0;
+                    
+                    let widthPx = widthDays * ganttScale;
+                    if (task.duration === 0) widthPx = 10;
+
+                    const barWrapper = document.createElement("div");
+                    barWrapper.className = "gantt-bar-wrapper";
+                    
+                    const isHighlightedCritical = showCriticalPath && task.isCritical;
+                    if (task.isCritical) barWrapper.classList.add("critical");
+                    if (task.duration === 0) barWrapper.classList.add("milestone");
+
+                    barWrapper.style.left = `${leftOffset}px`;
+                    barWrapper.style.width = `${widthPx}px`;
+                    barWrapper.dataset.id = task.id;
+
+                    // Aplicar color personalizado si no es ruta crítica ni hito
+                    if (task.duration > 0 && !isHighlightedCritical) {
+                        barWrapper.style.backgroundColor = colors.bg;
+                    }
+
+                    if (task.duration > 0) {
+                        const progressFill = document.createElement("div");
+                        progressFill.className = "gantt-bar-progress";
+                        progressFill.style.width = `${task.progress || 0}%`;
+                        if (!isHighlightedCritical) {
+                            progressFill.style.backgroundColor = colors.progress;
+                        }
+                        barWrapper.appendChild(progressFill);
+                    }
+
+                    const label = document.createElement("div");
+                    label.className = "gantt-bar-label";
+                    label.textContent = task.duration === 0 ? `◆ ${task.name}` : task.name;
+                    barWrapper.appendChild(label);
+
+                    if (task.duration > 0 && !isParentRow(tasks, index)) {
+                        const lHandle = document.createElement("div");
+                        lHandle.className = "gantt-bar-resize-handle left";
+                        lHandle.onmousedown = (e) => initBarResize(e, task.id, "left", minDate);
+                        
+                        const rHandle = document.createElement("div");
+                        rHandle.className = "gantt-bar-resize-handle right";
+                        rHandle.onmousedown = (e) => initBarResize(e, task.id, "right", minDate);
+
+                        barWrapper.appendChild(lHandle);
+                        barWrapper.appendChild(rHandle);
+                    }
+
+                    if (!isParentRow(tasks, index)) {
+                        barWrapper.onmousedown = (e) => initBarDrag(e, task.id, minDate);
+                    }
+
+                    row.appendChild(barWrapper);
+                }
+
+                rowsContainer.appendChild(row);
+            });
+
+            // 1. Ajustar alturas de las filas para alineación 1-a-1 perfecta
+            adjustGanttRowHeights();
+
+            // 2. Renderizar las líneas de dependencias
+            renderDependencyLines(minDate);
+        }
+
+        function adjustGanttRowHeights() {
+            if (!activeProject || !activeProject.tasks) return;
+            try {
+                // 1. Sincronizar altura de cabeceras (thead de Excel y cabecera del Gantt)
+                const thead = document.querySelector(".excel-table thead");
+                const ganttHeader = document.getElementById("gantt-timeline-header");
+                if (thead && ganttHeader) {
+                    const rect = thead.getBoundingClientRect();
+                    ganttHeader.style.height = `${rect.height}px`;
+                }
+
+                // 2. Sincronizar posición y altura de las filas individuales usando getBoundingClientRect()
+                const excelBody = document.getElementById("excel-grid-body");
+                if (!excelBody) return;
+                const bodyRect = excelBody.getBoundingClientRect();
+
+                const excelRows = excelBody.querySelectorAll("tr");
+                const ganttRows = document.querySelectorAll("#gantt-rows-container .gantt-row");
+                
+                const count = Math.min(excelRows.length, ganttRows.length);
+                let totalHeight = 0;
+                for (let i = 0; i < count; i++) {
+                    const excelRow = excelRows[i];
+                    const ganttRow = ganttRows[i];
+                    if (ganttRow && excelRow) {
+                        const rowRect = excelRow.getBoundingClientRect();
+                        const topOffset = rowRect.top - bodyRect.top;
+                        
+                        ganttRow.style.top = `${topOffset}px`;
+                        // Restamos 1px para evitar el solapamiento de bordes colapsados de la tabla
+                        ganttRow.style.height = `${rowRect.height - 1}px`;
+                        totalHeight = Math.max(totalHeight, topOffset + rowRect.height);
+                    }
+                }
+
+                // Ajustar la altura del contenedor para que el scroll vertical funcione correctamente
+                const rowsContainer = document.getElementById("gantt-rows-container");
+                if (rowsContainer) {
+                    rowsContainer.style.height = `${totalHeight}px`;
+                }
+
+                // Ajustar la altura del overlay SVG para cubrir el contenedor de filas
+                const svg = document.getElementById("gantt-svg-overlay");
+                if (svg) {
+                    svg.setAttribute("height", totalHeight);
+                }
+            } catch (err) {
+                console.error("[Gantt Align Error]", err);
+            }
+        }
+
+        function renderCalendarHeader(minDate, maxDate) {
+            const monthsRow = document.getElementById("gantt-months-row");
+            const daysRow = document.getElementById("gantt-days-row");
+            monthsRow.innerHTML = "";
+            daysRow.innerHTML = "";
+
+            const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+            let current = new Date(minDate.getTime());
+
+            let currentMonth = -1;
+            let currentMonthCell = null;
+            let currentMonthDaysCount = 0;
+
+            while (current <= maxDate) {
+                const dayCell = document.createElement("div");
+                dayCell.className = "gantt-header-cell";
+                dayCell.style.width = `${ganttScale}px`;
+                
+                // Mostrar número del día solo si la escala es legible (mayor o igual a 12px)
+                if (ganttScale >= 12) {
+                    dayCell.textContent = current.getDate();
+                } else {
+                    dayCell.textContent = "";
+                }
+
+                if (isWeekend(current)) {
+                    dayCell.classList.add("weekend");
+                }
+                daysRow.appendChild(dayCell);
+
+                if (current.getMonth() !== currentMonth) {
+                    if (currentMonthCell) {
+                        currentMonthCell.style.width = `${currentMonthDaysCount * ganttScale}px`;
+                    }
+                    currentMonth = current.getMonth();
+                    currentMonthDaysCount = 0;
+
+                    currentMonthCell = document.createElement("div");
+                    currentMonthCell.className = "gantt-header-cell";
+                    currentMonthCell.textContent = `${monthNames[currentMonth]} ${current.getFullYear()}`;
+                    monthsRow.appendChild(currentMonthCell);
+                }
+
+                currentMonthDaysCount++;
+                current.setDate(current.getDate() + 1);
+            }
+
+            if (currentMonthCell) {
+                currentMonthCell.style.width = `${currentMonthDaysCount * ganttScale}px`;
+            }
+        }
+
+        function renderDependencyLines(minDate) {
+            const svg = document.getElementById("gantt-svg-overlay");
+            svg.innerHTML = "";
+            const tasks = activeProject.tasks;
+
+            const parentWidth = document.getElementById("gantt-timeline-container").offsetWidth;
+            const parentHeight = document.getElementById("gantt-timeline-container").offsetHeight;
+            svg.setAttribute("width", parentWidth);
+            svg.setAttribute("height", parentHeight);
+
+            tasks.forEach((task, index) => {
+                if (task.dependencies) {
+                    const deps = task.dependencies.split(',').map(d => parseDependency(d)).filter(Boolean);
+                    
+                    deps.forEach(dep => {
+                        const predIndex = tasks.findIndex(t => t.id === dep.predecessorId);
+                        const pred = tasks[predIndex];
+                        if (!pred) return;
+
+                        const pStart = parseDateString(pred.start);
+                        const pEnd = parseDateString(pred.end);
+                        const pLeft = getDaysDifference(minDate, pStart, false) * ganttScale;
+                        const pWidth = pred.duration === 0 ? 10 : getDaysDifference(pStart, pEnd, false) * ganttScale;
+                        
+                        const yPred = (predIndex * 24) + 12; // Altura media de la fila (24px)
+
+                        const sStart = parseDateString(task.start);
+                        const sEnd = parseDateString(task.end);
+                        const sLeft = getDaysDifference(minDate, sStart, false) * ganttScale;
+                        const sWidth = task.duration === 0 ? 10 : getDaysDifference(sStart, sEnd, false) * ganttScale;
+
+                        const ySucc = (index * 24) + 12;
+
+                        let xFrom, xTo;
+
+                        if (dep.type === "FS") {
+                            xFrom = pLeft + pWidth;
+                            xTo = sLeft;
+                        } else if (dep.type === "SS") {
+                            xFrom = pLeft;
+                            xTo = sLeft;
+                        } else if (dep.type === "FF") {
+                            xFrom = pLeft + pWidth;
+                            xTo = sLeft + sWidth;
+                        } else if (dep.type === "SF") {
+                            xFrom = pLeft;
+                            xTo = sLeft + sWidth;
+                        }
+
+                        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                        let pathData = "";
+
+                        if (xTo > xFrom + 8) {
+                            const midX = xFrom + (xTo - xFrom) / 2;
+                            pathData = `M ${xFrom} ${yPred} L ${midX} ${yPred} L ${midX} ${ySucc} L ${xTo} ${ySucc}`;
+                        } else {
+                            const offset = 10;
+                            pathData = `M ${xFrom} ${yPred} L ${xFrom + offset} ${yPred} L ${xFrom + offset} ${(yPred + ySucc)/2} L ${xTo - offset} ${(yPred + ySucc)/2} L ${xTo - offset} ${ySucc} L ${xTo} ${ySucc}`;
+                        }
+
+                        path.setAttribute("d", pathData);
+                        path.setAttribute("class", `dep-line ${task.isCritical && pred.isCritical ? 'critical' : ''}`);
+                        path.setAttribute("data-from-task-id", pred.id);
+                        path.setAttribute("data-to-task-id", task.id);
+                        
+                        const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+                        const size = 3;
+                        arrow.setAttribute("points", `${xTo-size} ${ySucc-size} ${xTo} ${ySucc} ${xTo-size} ${ySucc+size}`);
+                        arrow.setAttribute("class", `dep-arrow ${task.isCritical && pred.isCritical ? 'critical' : ''}`);
+                        arrow.setAttribute("data-from-task-id", pred.id);
+                        arrow.setAttribute("data-to-task-id", task.id);
+
+                        svg.appendChild(path);
+                        svg.appendChild(arrow);
+                    });
+                }
+            });
+        }
+
+        function initBarDrag(e, taskId, minDate) {
+            e.stopPropagation();
+            const task = activeProject.tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            const barWrapper = e.currentTarget;
+            const initialX = e.clientX;
+            const initialLeft = parseFloat(barWrapper.style.left);
+
+            document.onmousemove = (moveEvent) => {
+                const deltaX = moveEvent.clientX - initialX;
+                const newLeft = Math.max(0, initialLeft + deltaX);
+                barWrapper.style.left = `${newLeft}px`;
+            };
+
+            document.onmouseup = (upEvent) => {
+                document.onmousemove = null;
+                document.onmouseup = null;
+
+                const deltaX = upEvent.clientX - initialX;
+                const daysShift = Math.round(deltaX / ganttScale);
+
+                if (daysShift !== 0) {
+                    pushUndoState();
+                    const startD = parseDateString(task.start);
+                    const newStart = addDays(startD, daysShift, false);
+                    task.start = formatDateString(newStart);
+                    
+                    if (task.duration > 0) {
+                        task.end = formatDateString(addDays(newStart, task.duration, activeProject.excludeWeekends));
+                    } else {
+                        task.end = task.start;
+                    }
+                    
+                    runSchedulingEngine();
+                    renderExcelGrid();
+                    renderGanttTimeline();
+                } else {
+                    const rowTr = document.querySelector(`tr[data-id="${taskId}"]`);
+                    if (rowTr) {
+                        const nameCell = rowTr.querySelector('[data-col="name"]');
+                        if (nameCell) nameCell.click();
+                    }
+                }
+            };
+        }
+
+        function initBarResize(e, taskId, direction, minDate) {
+            e.stopPropagation();
+            e.preventDefault();
+            const task = activeProject.tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            const barWrapper = e.currentTarget.parentElement;
+            const initialX = e.clientX;
+            const initialLeft = parseFloat(barWrapper.style.left);
+            const initialWidth = parseFloat(barWrapper.style.width);
+
+            document.onmousemove = (moveEvent) => {
+                const deltaX = moveEvent.clientX - initialX;
+                
+                if (direction === "right") {
+                    const newWidth = Math.max(ganttScale, initialWidth + deltaX);
+                    barWrapper.style.width = `${newWidth}px`;
+                } else if (direction === "left") {
+                    const newLeft = Math.max(0, initialLeft + deltaX);
+                    const newWidth = Math.max(ganttScale, initialWidth - deltaX);
+                    barWrapper.style.left = `${newLeft}px`;
+                    barWrapper.style.width = `${newWidth}px`;
+                }
+            };
+
+            document.onmouseup = (upEvent) => {
+                document.onmousemove = null;
+                document.onmouseup = null;
+
+                const deltaX = upEvent.clientX - initialX;
+                const daysShift = Math.round(deltaX / ganttScale);
+
+                if (daysShift !== 0) {
+                    pushUndoState();
+                    if (direction === "right") {
+                        task.duration = Math.max(1, task.duration + daysShift);
+                        task.end = formatDateString(addDays(parseDateString(task.start), task.duration, activeProject.excludeWeekends));
+                    } else if (direction === "left") {
+                        const maxShift = task.duration - 1;
+                        const actualShift = Math.min(daysShift, maxShift);
+                        
+                        task.duration = Math.max(1, task.duration - actualShift);
+                        task.start = formatDateString(addDays(parseDateString(task.start), actualShift, false));
+                        task.end = formatDateString(addDays(parseDateString(task.start), task.duration, activeProject.excludeWeekends));
+                    }
+
+                    runSchedulingEngine();
+                    renderExcelGrid();
+                    renderGanttTimeline();
+                } else {
+                    renderGanttTimeline();
+                }
+            };
+        }
+
+        let isSyncingScroll = false;
+        function syncGridScroll() {
+            if (isSyncingScroll) { isSyncingScroll = false; return; }
+            isSyncingScroll = true;
+            const grid = document.getElementById("excel-grid-panel");
+            const timeline = document.getElementById("gantt-timeline-panel");
+            timeline.scrollTop = grid.scrollTop;
+        }
+
+        function syncGanttScroll() {
+            if (isSyncingScroll) { isSyncingScroll = false; return; }
+            isSyncingScroll = true;
+            const grid = document.getElementById("excel-grid-panel");
+            const timeline = document.getElementById("gantt-timeline-panel");
+            grid.scrollTop = timeline.scrollTop;
+        }
+
+        function initSplitDrag(e) {
+            isSplitDragging = true;
+            document.getElementById("workspace-split-handle").classList.add("dragging");
+
+            document.onmousemove = (moveEvent) => {
+                const containerWidth = document.getElementById("workspace-splitter-container").offsetWidth;
+                const newLeftPercent = (moveEvent.clientX / containerWidth) * 100;
+                
+                if (newLeftPercent > 15 && newLeftPercent < 85) {
+                    document.getElementById("excel-grid-panel").style.width = `${newLeftPercent}%`;
+                    document.getElementById("workspace-split-handle").style.left = `${newLeftPercent}%`;
+                }
+            };
+
+            document.onmouseup = () => {
+                isSplitDragging = false;
+                document.getElementById("workspace-split-handle").classList.remove("dragging");
+                document.onmousemove = null;
+                document.onmouseup = null;
+                renderGanttTimeline();
+            };
+        }
+
+
+        /* ==========================================================================
+           BARRA LATERAL / NAVEGACIÓN Y CONFIGURACIONES
+           ========================================================================== */
+        
+        function switchTab(tabId) {
+            // Desactivar pestañas y cuerpos
+            document.querySelectorAll(".ribbon-tab-btn").forEach(b => b.classList.remove("active"));
+            document.querySelectorAll(".ribbon-body").forEach(b => b.classList.remove("active"));
+
+            // Activar actual
+            const btn = Array.from(document.querySelectorAll(".ribbon-tab-btn")).find(b => b.textContent.toLowerCase() === (tabId === 'home' ? 'inicio' : tabId === 'formulas' ? 'fórmulas' : tabId));
+            if (btn) btn.classList.add("active");
+
+            const body = document.getElementById(`ribbon-${tabId}`);
+            if (body) body.classList.add("active");
+        }
+
+        function switchView(viewId) {
+            document.querySelectorAll(".view-pane").forEach(p => p.classList.remove("active"));
+            document.getElementById(`view-${viewId}`).classList.add("active");
+
+            if (viewId === 'dashboard') {
+                loadProjectsList();
+                document.getElementById("excel-app-title").textContent = "Bronze Gantt Pro - Proyectos";
+                document.getElementById("excel-status-mode").textContent = "Navegador de archivos";
+                
+                // Activar la pestaña Proyectos en el pie
+                document.querySelectorAll(".sheet-tab").forEach(t => t.classList.remove("active"));
+                const tabDash = document.getElementById("sheet-tab-dashboard");
+                if (tabDash) tabDash.classList.add("active");
+            } else if (viewId === 'workspace') {
+                renderExcelGrid();
+                renderGanttTimeline();
+                document.getElementById("excel-status-mode").textContent = "Editor de proyecto activo";
+            }
+        }
+
+        function switchSheet(sheetId) {
+            switchView('workspace');
+            
+            document.querySelectorAll(".sheet-tab").forEach(t => t.classList.remove("active"));
+            
+            const gridContainer = document.getElementById("workspace-splitter-container");
+            const tutorialContainer = document.getElementById("workspace-tutorial-container");
+            
+            if (sheetId === 'gantt') {
+                document.getElementById("sheet-tab-gantt").classList.add("active");
+                gridContainer.style.display = "flex";
+                if (tutorialContainer) tutorialContainer.style.display = "none";
+                renderExcelGrid();
+                renderGanttTimeline();
+            } else if (sheetId === 'tutorial') {
+                document.getElementById("sheet-tab-tutorial").classList.add("active");
+                gridContainer.style.display = "none";
+                if (tutorialContainer) {
+                    tutorialContainer.style.display = "block";
+                }
+            }
+            lucide.createIcons();
+        }
+
+        /* ==========================================================================
+           LÓGICA DEL ASISTENTE DE DEPENDENCIAS (CONSTRUCTOR VISUAL)
+           ========================================================================== */
+        let depHelperCurrentTaskId = null;
+        let depHelperTempList = [];
+
+        function openDependencyFromRibbon() {
+            if (selectedCell.rowId) {
+                openDependencyHelperModal(selectedCell.rowId);
+            } else {
+                alert("Por favor, seleccione primero la tarea que desea vincular en la rejilla.");
+            }
+        }
+
+        function openDependencyHelperModal(taskId) {
+            depHelperCurrentTaskId = taskId;
+            const task = activeProject.tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            document.getElementById("dep-helper-current-task-name").textContent = task.name;
+            
+            // 1. Limpiar lista temporal
+            depHelperTempList = [];
+            
+            // 2. Parsear dependencias existentes
+            if (task.dependencies) {
+                task.dependencies.split(',').forEach(d => {
+                    const parsed = parseDependency(d);
+                    if (parsed) {
+                        depHelperTempList.push(parsed);
+                    }
+                });
+            }
+
+            // 3. Poblar el select de tareas predecesoras disponibles (excluyendo a sí misma)
+            const select = document.getElementById("dep-helper-predecessor-select");
+            select.innerHTML = "";
+            
+            const defaultOpt = document.createElement("option");
+            defaultOpt.value = "";
+            defaultOpt.textContent = "-- Seleccione una tarea predecesora --";
+            select.appendChild(defaultOpt);
+            
+            activeProject.tasks.forEach((t, idx) => {
+                if (t.id === taskId) return;
+                
+                const option = document.createElement("option");
+                option.value = t.id;
+                
+                const wbsLabel = calculateWBSLabel(activeProject.tasks, idx);
+                option.textContent = `${wbsLabel} - ${t.name}`;
+                select.appendChild(option);
+            });
+
+            // 4. Resetear formulario
+            document.getElementById("dep-helper-type-select").value = "FS";
+            document.getElementById("dep-helper-lag-input").value = "0";
+
+            // 5. Renderizar lista activa
+            renderDepHelperActiveList();
+
+            // 6. Mostrar modal
+            document.getElementById("dependency-helper-modal").style.display = "flex";
+            lucide.createIcons();
+        }
+
+        function closeDependencyHelperModal() {
+            document.getElementById("dependency-helper-modal").style.display = "none";
+            depHelperCurrentTaskId = null;
+            depHelperTempList = [];
+        }
+
+        function renderDepHelperActiveList() {
+            const tbody = document.getElementById("dep-helper-active-tbody");
+            tbody.innerHTML = "";
+
+            if (depHelperTempList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="padding: 10px; text-align: center; color: var(--text-muted);">Sin predecesoras vinculadas.</td></tr>`;
+                return;
+            }
+
+            depHelperTempList.forEach((dep, idx) => {
+                const tr = document.createElement("tr");
+                tr.style.borderBottom = "1px solid #eaeaea";
+
+                const predTask = activeProject.tasks.find(t => t.id === dep.predecessorId);
+                const predName = predTask ? predTask.name : `Tarea #${dep.predecessorId}`;
+
+                const tdName = document.createElement("td");
+                tdName.style.padding = "6px";
+                tdName.textContent = predName;
+                tr.appendChild(tdName);
+
+                const tdType = document.createElement("td");
+                tdType.style.padding = "6px";
+                tdType.style.textAlign = "center";
+                tdType.textContent = dep.type;
+                tr.appendChild(tdType);
+
+                const tdLag = document.createElement("td");
+                tdLag.style.padding = "6px";
+                tdLag.style.textAlign = "right";
+                tdLag.textContent = dep.lag > 0 ? `+${dep.lag}d` : dep.lag < 0 ? `${dep.lag}d` : "0d";
+                tr.appendChild(tdLag);
+
+                const tdAction = document.createElement("td");
+                tdAction.style.padding = "6px";
+                tdAction.style.textAlign = "center";
+                tdAction.innerHTML = `<button class="btn-office" onclick="removeDependencyFromTempList(${idx})" style="padding: 2px 6px; color: var(--danger); cursor: pointer;"><i data-lucide="trash-2" style="width: 12px; height: 12px;"></i></button>`;
+                tr.appendChild(tdAction);
+
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        function addDependencyToTempList() {
+            const predIdVal = document.getElementById("dep-helper-predecessor-select").value;
+            if (!predIdVal) {
+                alert("Por favor seleccione una tarea predecesora.");
+                return;
+            }
+
+            const predId = parseInt(predIdVal);
+            const type = document.getElementById("dep-helper-type-select").value;
+            const lagInput = document.getElementById("dep-helper-lag-input").value;
+            const lag = parseInt(lagInput) || 0;
+
+            if (depHelperTempList.some(d => d.predecessorId === predId)) {
+                alert("Esta tarea ya está vinculada.");
+                return;
+            }
+
+            depHelperTempList.push({
+                predecessorId: predId,
+                type: type,
+                lag: lag
+            });
+
+            renderDepHelperActiveList();
+        }
+
+        function removeDependencyFromTempList(index) {
+            depHelperTempList.splice(index, 1);
+            renderDepHelperActiveList();
+        }
+
+        function saveDependencyHelper() {
+            const task = activeProject.tasks.find(t => t.id === depHelperCurrentTaskId);
+            if (!task) return;
+
+            const depStrings = depHelperTempList.map(d => {
+                let lagStr = "";
+                if (d.lag > 0) lagStr = `+${d.lag}`;
+                else if (d.lag < 0) lagStr = `${d.lag}`;
+                return `${d.predecessorId}${d.type}${lagStr}`;
+            });
+
+            const newDeps = depStrings.join(',');
+            if ((task.dependencies || "") !== newDeps) {
+                pushUndoState();
+            }
+
+            task.dependencies = newDeps;
+            
+            runSchedulingEngine();
+            renderExcelGrid();
+            renderGanttTimeline();
+            
+            closeDependencyHelperModal();
+        }
+
+        /* ==========================================================================
+           LÓGICA DEL TOOLTIP FLOTANTE DE DEPENDENCIAS (HOVER)
+           ========================================================================== */
+        function showDependencyTooltip(depStr, event) {
+            const tooltip = document.getElementById("excel-tooltip");
+            if (!tooltip) return;
+
+            const summaryHtml = getFriendlyDependencySummary(depStr);
+            if (!summaryHtml) return;
+
+            tooltip.innerHTML = summaryHtml;
+            tooltip.style.display = "block";
+            tooltip.style.left = (event.pageX + 12) + "px";
+            tooltip.style.top = (event.pageY + 12) + "px";
+        }
+
+        function moveDependencyTooltip(event) {
+            const tooltip = document.getElementById("excel-tooltip");
+            if (tooltip && tooltip.style.display === "block") {
+                tooltip.style.left = (event.pageX + 12) + "px";
+                tooltip.style.top = (event.pageY + 12) + "px";
+            }
+        }
+
+        function hideDependencyTooltip() {
+            const tooltip = document.getElementById("excel-tooltip");
+            if (tooltip) {
+                tooltip.style.display = "none";
+            }
+        }
+
+        function getFriendlyDependencySummary(depStr) {
+            if (!depStr || !depStr.trim()) return "";
+            const deps = depStr.split(',').map(d => parseDependency(d)).filter(Boolean);
+            if (deps.length === 0) return "";
+
+            let html = "<div style='font-weight:700; margin-bottom:6px; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:3px; color:#ffffff;'>Resumen de Dependencia:</div>";
+            html += "<ul style='padding-left:14px; margin:0; color:#e1dfdd; list-style-type: disc;'>";
+
+            deps.forEach(dep => {
+                const pred = activeProject.tasks.find(t => t.id === dep.predecessorId);
+                const predName = pred ? pred.name : `Tarea #${dep.predecessorId}`;
+                
+                let relText = "";
+                if (dep.type === "FS") relText = "al terminar";
+                else if (dep.type === "SS") relText = "al iniciar";
+                else if (dep.type === "FF") relText = "al finalizar";
+                else if (dep.type === "SF") relText = "al iniciar";
+
+                let lagText = "";
+                if (dep.lag > 0) lagText = ` (más ${dep.lag} días de retardo)`;
+                else if (dep.lag < 0) lagText = ` (adelantado ${Math.abs(dep.lag)} días)`;
+
+                html += `<li style='margin-bottom:4px;'>Comienza <strong>${relText}</strong> la tarea <strong>'${predName}'</strong>${lagText}</li>`;
+            });
+            html += "</ul>";
+            return html;
+        }
+
+        /* ==========================================================================
+           SISTEMA DE DESHACER (UNDO / CTRL + Z)
+           ========================================================================== */
+        let undoHistory = [];
+
+        function pushUndoState() {
+            const state = JSON.parse(JSON.stringify(activeProject.tasks));
+            undoHistory.push(state);
+            if (undoHistory.length > 50) {
+                undoHistory.shift();
+            }
+            updateUndoButtonState();
+        }
+
+        function triggerUndo() {
+            if (undoHistory.length === 0) return;
+            const prevState = undoHistory.pop();
+            activeProject.tasks = prevState;
+            
+            runSchedulingEngine();
+            renderExcelGrid();
+            renderGanttTimeline();
+            
+            updateUndoButtonState();
+        }
+
+        function updateUndoButtonState() {
+            const btn = document.getElementById("btn-ribbon-undo");
+            if (btn) {
+                if (undoHistory.length > 0) {
+                    btn.disabled = false;
+                    btn.style.opacity = "1";
+                } else {
+                    btn.disabled = true;
+                    btn.style.opacity = "0.5";
+                }
+            }
+        }
+
+        // Agregar/Eliminar filas
+        function addNewTaskRow() {
+            pushUndoState();
+            const tasks = activeProject.tasks;
+            const newId = tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1;
+
+            let startD = activeProject.start || "2026-07-01";
+            if (tasks.length > 0) {
+                startD = tasks[tasks.length - 1].start;
+            }
+
+            const newTask = {
+                id: newId,
+                name: "Nueva Tarea",
+                start: startD,
+                duration: 5,
+                dependencies: "",
+                progress: 0,
+                owner: "PM",
+                risk: "Low",
+                indent: tasks.length > 0 ? tasks[tasks.length - 1].indent : 0
+            };
+
+            tasks.push(newTask);
+            runSchedulingEngine();
+            renderExcelGrid();
+            renderGanttTimeline();
+        }
+
+        function deleteSelectedRow() {
+            if (!selectedCell.rowId) {
+                alert("Seleccione una celda en la tarea que desea eliminar.");
+                return;
+            }
+
+            pushUndoState();
+            activeProject.tasks = activeProject.tasks.filter(t => t.id !== selectedCell.rowId);
+            
+            // Limpiar dependencias obsoletas
+            activeProject.tasks.forEach(t => {
+                if (t.dependencies) {
+                    t.dependencies = t.dependencies.split(',')
+                        .filter(d => !d.startsWith(`${selectedCell.rowId}`))
+                        .join(',');
+                }
+            });
+
+            selectedCell = { rowId: null, colKey: null };
+            runSchedulingEngine();
+            renderExcelGrid();
+            renderGanttTimeline();
+        }
+
+        function indentRow() {
+            if (!selectedCell.rowId) return;
+            const taskIndex = activeProject.tasks.findIndex(t => t.id === selectedCell.rowId);
+            
+            if (taskIndex > 0) {
+                const currentTask = activeProject.tasks[taskIndex];
+                const prevTask = activeProject.tasks[taskIndex - 1];
+
+                if (currentTask.indent <= prevTask.indent) {
+                    pushUndoState();
+                    currentTask.indent++;
+                    runSchedulingEngine();
+                    renderExcelGrid();
+                    renderGanttTimeline();
+                }
+            }
+        }
+
+        function outdentRow() {
+            if (!selectedCell.rowId) return;
+            const task = activeProject.tasks.find(t => t.id === selectedCell.rowId);
+            
+            if (task && task.indent > 0) {
+                pushUndoState();
+                task.indent--;
+                runSchedulingEngine();
+                renderExcelGrid();
+                renderGanttTimeline();
+            }
+        }
+
+        function toggleCriticalPath() {
+            showCriticalPath = !showCriticalPath;
+            document.getElementById("btn-toggle-critical").classList.toggle("active", showCriticalPath);
+            runSchedulingEngine();
+            renderExcelGrid();
+            renderGanttTimeline();
+        }
+
+        function toggleWeekendSolver() {
+            activeProject.excludeWeekends = !activeProject.excludeWeekends;
+            document.getElementById("weekends-btn-text").textContent = activeProject.excludeWeekends ? "Días Hábiles" : "Días Naturales";
+            runSchedulingEngine();
+            renderExcelGrid();
+            renderGanttTimeline();
+        }
+
+
+        /* ==========================================================================
+           EXPORTACIONES & COMPARTICIÓN
+           ========================================================================== */
+        
+        function exportToExcel() {
+            const excelData = [
+                ["WBS", "Nombre de Tarea", "Inicio", "Fin", "Duración (Días)", "Dependencia", "Progreso (%)", "Responsable", "Riesgo"]
+            ];
+
+            activeProject.tasks.forEach((t, idx) => {
+                excelData.push([
+                    calculateWBSLabel(activeProject.tasks, idx),
+                    t.name,
+                    t.start,
+                    t.end,
+                    t.duration,
+                    t.dependencies || "",
+                    t.progress,
+                    t.owner || "",
+                    t.risk || "Low"
+                ]);
+            });
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(excelData);
+            XLSX.utils.book_append_sheet(wb, ws, "Hoja1");
+            XLSX.writeFile(wb, `${activeProject.name.replace(/\s+/g, "_")}.xlsx`);
+        }
+
+        function importFromExcel(e) {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const data = new Uint8Array(event.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                
+                if (jsonData.length < 2) {
+                    alert("El archivo no contiene suficientes tareas.");
+                    return;
+                }
+
+                const importedTasks = [];
+                let currentId = 1;
+
+                for (let i = 1; i < jsonData.length; i++) {
+                    const row = jsonData[i];
+                    if (!row || row.length === 0 || !row[1]) continue;
+
+                    let wbsStr = String(row[0] || "1");
+                    let indent = (wbsStr.split('.').length - 1);
+
+                    importedTasks.push({
+                        id: currentId,
+                        name: String(row[1]),
+                        start: String(row[2] || "2026-07-01"),
+                        end: String(row[3] || "2026-07-05"),
+                        duration: parseInt(row[4]) || 5,
+                        dependencies: String(row[5] || ""),
+                        progress: parseInt(row[6]) || 0,
+                        owner: String(row[7] || "PM"),
+                        risk: String(row[8] || "Low"),
+                        indent: indent
+                    });
+                    currentId++;
+                }
+
+                if (importedTasks.length > 0) {
+                    activeProject.tasks = importedTasks;
+                    runSchedulingEngine();
+                    renderExcelGrid();
+                    renderGanttTimeline();
+                }
+            };
+            reader.readAsArrayBuffer(files[0]);
+        }
+
+        function exportToPDF() {
+            window.print();
+        }
+
+        function generateShareUrl() {
+            const shareData = btoa(JSON.stringify(activeProject));
+            const shareUrl = `${window.location.origin}${window.location.pathname}?view_only=${shareData}`;
+            
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                alert("¡Enlace de visor en vivo copiado al portapapeles! Puedes enviarlo a tus clientes de forma gratuita.");
+            });
+        }
+
+        function checkReadOnlyQuery() {
+            const params = new URLSearchParams(window.location.search);
+            const viewOnlyData = params.get("view_only");
+            
+            if (viewOnlyData) {
+                try {
+                    const parsedProject = JSON.parse(atob(viewOnlyData));
+                    activeProject = parsedProject;
+                    
+                    document.getElementById("read-only-banner").style.display = "flex";
+                    document.querySelectorAll(".ribbon-btn-small, .ribbon-btn-large, input, select").forEach(el => {
+                        el.style.pointerEvents = "none";
+                        el.style.opacity = "0.6";
+                    });
+
+                    runSchedulingEngine();
+                    switchView('workspace');
+                } catch(e) {
+                    console.error("Error al cargar vista compartida:", e);
+                }
+            }
+        }
+
+        function exitReadOnlyMode() {
+            window.location.href = window.location.pathname;
+        }
+
+        // Modales Proyecto
+        function openCreateProjectModal() {
+            document.getElementById("create-project-modal").style.display = "flex";
+            document.getElementById("new-project-name").value = "";
+            document.getElementById("new-project-start").value = formatDateString(new Date());
+        }
+
+        function closeCreateProjectModal() {
+            document.getElementById("create-project-modal").style.display = "none";
+        }
+
+        function submitCreateProject() {
+            const name = document.getElementById("new-project-name").value.trim();
+            const start = document.getElementById("new-project-start").value;
+            const template = document.getElementById("new-project-template").value;
+
+            if (!name) {
+                alert("Debe ingresar un nombre de archivo.");
+                return;
+            }
+
+            let tasks = [];
+            if (template === "software") {
+                tasks = [
+                    { id: 1, name: "Reunión de Kickoff", start: start, duration: 2, dependencies: "", progress: 0, owner: "PM", risk: "Low", indent: 0 },
+                    { id: 2, name: "Especificaciones Técnicas", start: start, duration: 4, dependencies: "1FS", progress: 0, owner: "Analista", risk: "Low", indent: 1 },
+                    { id: 3, name: "Diseño de Esquema DB", start: start, duration: 5, dependencies: "2FS", progress: 0, owner: "Dev", risk: "Medium", indent: 1 },
+                    { id: 4, name: "Hito Diseño Cerrado", start: start, duration: 0, dependencies: "2FS", progress: 0, owner: "PM", risk: "Low", indent: 0 }
+                ];
+            } else if (template === "construction") {
+                tasks = [
+                    { id: 1, name: "Estudio de Cimientos", start: start, duration: 5, dependencies: "", progress: 0, owner: "Ingeniero", risk: "Low", indent: 0 },
+                    { id: 2, name: "Compra de Materiales", start: start, duration: 6, dependencies: "1FS", progress: 0, owner: "Logística", risk: "High", indent: 1 }
+                ];
+            } else if (template === "megaproject") {
+                tasks = [
+                    { id: 1, name: "FASE 1: PLANIFICACIÓN Y FACTIBILIDAD", start: start, duration: 190, dependencies: "", progress: 95, owner: "Comité", risk: "Low", indent: 0 },
+                    { id: 2, name: "Estudios Ambientales e Ingeniería Básica", start: start, duration: 80, dependencies: "", progress: 85, owner: "Consultor", risk: "Medium", indent: 1 },
+                    { id: 3, name: "Adquisición de Licencias y Permisos Estatales", start: start, duration: 110, dependencies: "2FS", progress: 50, owner: "Legal", risk: "High", indent: 1 },
+                    { id: 4, name: "Hito: Viabilidad Técnica Aprobada", start: start, duration: 0, dependencies: "3FS", progress: 0, owner: "PM", risk: "Low", indent: 0 },
+                    { id: 5, name: "FASE 2: CONSTRUCCIÓN Y OBRAS CIVILES", start: start, duration: 460, dependencies: "", progress: 10, owner: "Ingeniero Civil", risk: "Medium", indent: 0 },
+                    { id: 6, name: "Movimiento de Tierras y Excavación", start: start, duration: 150, dependencies: "4FS", progress: 40, owner: "Contratista A", risk: "Medium", indent: 1 },
+                    { id: 7, name: "Cimentación y Fundaciones Estructurales", start: start, duration: 120, dependencies: "6FS", progress: 0, owner: "Contratista A", risk: "High", indent: 1 },
+                    { id: 8, name: "Montaje de Estructura Principal", start: start, duration: 190, dependencies: "7FS", progress: 0, owner: "Contratista B", risk: "Medium", indent: 1 },
+                    { id: 9, name: "FASE 3: INSTALACIONES, ACABADOS Y PRUEBAS", start: start, duration: 320, dependencies: "", progress: 0, owner: "Supervisor", risk: "Low", indent: 0 },
+                    { id: 10, name: "Instalación de Redes Eléctricas y Sanitarias", start: start, duration: 130, dependencies: "8FS", progress: 0, owner: "Subcontrato E", risk: "Medium", indent: 1 },
+                    { id: 11, name: "Acabados de Fachada e Interiores", start: start, duration: 140, dependencies: "10FS", progress: 0, owner: "Subcontrato F", risk: "Low", indent: 1 },
+                    { id: 12, name: "Pruebas de Sistemas y Comisionamiento", start: start, duration: 50, dependencies: "11FS", progress: 0, owner: "QA Team", risk: "High", indent: 1 },
+                    { id: 13, name: "Hito: Entrega y Cierre del Proyecto", start: start, duration: 0, dependencies: "12FS", progress: 0, owner: "PM", risk: "Low", indent: 0 }
+                ];
+            } else {
+                tasks = [
+                    { id: 1, name: "Tarea 1", start: start, duration: 5, dependencies: "", progress: 0, owner: "PM", risk: "Low", indent: 0 }
+                ];
+            }
+
+            activeProject = {
+                id: "proj_" + Date.now(),
+                name: name.endsWith(".xlsx") ? name : name + ".xlsx",
+                start: start,
+                status: "active",
+                excludeWeekends: true,
+                tasks: tasks
+            };
+
+            closeCreateProjectModal();
+            runSchedulingEngine();
+            // Guardar inmediatamente en el servidor para persistencia en base de datos
+            saveProjectToServer().then(() => {
+                loadProjectsList(); // Recargar la lista de proyectos del dashboard
+                switchView('workspace');
+            });
+        }
+
+        function logoutUser() {
+            localStorage.clear();
+            window.location.href = '/login.html';
+        }
+
+        /* ==========================================================================
+           INICIALIZACIÓN DE LA APLICACIÓN
+           ========================================================================== */
+        window.onload = () => {
+            lucide.createIcons();
+            fetchUserProfile();
+            loadProjectsList();
+            checkReadOnlyQuery();
+
+            // Registrar atajo de teclado Ctrl+Z para Deshacer
+            window.addEventListener("keydown", (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                    const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : "";
+                    if (activeTag !== "input" && activeTag !== "textarea") {
+                        e.preventDefault();
+                        triggerUndo();
+                    }
+                }
+            });
+
+            // Ajustar alturas de filas al cambiar el tamaño de la ventana
+            window.addEventListener("resize", () => {
+                adjustGanttRowHeights();
+                if (activeProject && activeProject.tasks && activeProject.tasks.length > 0) {
+                    const projectStart = parseDateString(activeProject.start);
+                    const minDate = new Date(projectStart.getTime());
+                    minDate.setDate(minDate.getDate() - 4);
+                    renderDependencyLines(minDate);
+                }
+            });
+
+            // Recalcular alturas cuando las fuentes web estén listas
+            if (document.fonts) {
+                document.fonts.ready.then(() => {
+                    setTimeout(() => {
+                        adjustGanttRowHeights();
+                        if (activeProject && activeProject.tasks && activeProject.tasks.length > 0) {
+                            const projectStart = parseDateString(activeProject.start);
+                            const minDate = new Date(projectStart.getTime());
+                            minDate.setDate(minDate.getDate() - 4);
+                            renderDependencyLines(minDate);
+                        }
+                    }, 100);
+                });
+            }
+        };
+    </script>
+    <!-- TOOLTIP PARA RESUMEN DE DEPENDENCIAS -->
+    <div id="excel-tooltip" style="display: none; position: absolute; z-index: 9999; background-color: #323130; color: #ffffff; padding: 10px 14px; font-size: 11px; border-radius: 4px; box-shadow: var(--shadow-md); max-width: 320px; pointer-events: none; line-height: 1.4; border-left: 3px solid var(--excel-green); font-family: var(--font-sans);"></div>
+</body>
+</html>

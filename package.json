@@ -1,0 +1,19 @@
+{
+  "name": "bronze-apps-gantt-saas",
+  "version": "1.0.0",
+  "description": "Plataforma SaaS Excel Clone para Diagramas de Gantt y Ruta Crítica (Bronze APPS)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.12.0"
+  },
+  "author": "Antigravity",
+  "license": "MIT"
+}

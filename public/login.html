@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Bronze Gantt Pro</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+:root {
+  --bronze-hue: 28;
+  --bronze: hsl(var(--bronze-hue), 55%, 38%);
+  --bronze-dark: hsl(var(--bronze-hue), 60%, 28%);
+  --bronze-light: hsl(var(--bronze-hue), 60%, 91%);
+  --bronze-soft: hsl(var(--bronze-hue), 40%, 95%);
+
+  /* Neutrals */
+  --bg-app: hsl(28, 25%, 97%);
+  --bg-card: hsl(0, 0%, 100%);
+  --text-dark: hsl(28, 30%, 12%);
+  --text-medium: hsl(28, 20%, 32%);
+  --text-muted: hsl(28, 15%, 52%);
+  --border-color: hsl(28, 15%, 85%);
+
+  --danger: hsl(354, 70%, 48%);
+  --danger-light: hsl(354, 70%, 94%);
+  --danger-dark: hsl(354, 70%, 22%);
+
+  --success: hsl(142, 60%, 35%);
+  --success-light: hsl(142, 60%, 94%);
+
+  --font-sans: 'Inter', sans-serif;
+  --shadow-lg: 0 12px 32px rgba(45, 30, 20, 0.08);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --radius-md: 10px;
+  --radius-sm: 4px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-app: hsl(28, 15%, 8%);
+    --bg-card: hsl(28, 15%, 12%);
+    --text-dark: hsl(28, 20%, 94%);
+    --text-medium: hsl(28, 15%, 80%);
+    --text-muted: hsl(28, 10%, 50%);
+    --border-color: hsl(28, 15%, 22%);
+    --bronze-light: hsl(var(--bronze-hue), 50%, 15%);
+    --bronze-soft: hsl(var(--bronze-hue), 30%, 10%);
+    --danger-light: hsl(354, 70%, 12%);
+    --danger-dark: hsl(354, 70%, 80%);
+    --success-light: hsl(142, 60%, 12%);
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  color: var(--text-dark);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  gap: 10px;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 420px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 30px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.login-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+}
+
+.icon-box {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: var(--bronze-soft);
+  color: var(--bronze);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-box svg {
+  width: 24px;
+  height: 24px;
+}
+
+.login-header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.login-header p {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Alert Notification Banner */
+.alert-banner {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.alert-banner.error {
+  display: flex;
+  background-color: var(--danger-light);
+  color: var(--danger-dark);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.alert-banner.success {
+  display: flex;
+  background-color: var(--success-light);
+  color: hsl(142, 70%, 25%);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+/* Form Styles */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-medium);
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-wrapper svg {
+  position: absolute;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding: 10px 12px 10px 38px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-card);
+  color: var(--text-dark);
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.input-wrapper input:focus {
+  border-color: var(--bronze);
+  box-shadow: 0 0 0 3px var(--bronze-light);
+}
+
+.btn {
+  width: 100%;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: var(--bronze);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  transition: all 0.15s ease;
+}
+
+.btn:hover {
+  background-color: var(--bronze-dark);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.form-footer {
+  font-size: 11.5px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.form-footer a {
+  color: var(--bronze);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.form-footer a:hover {
+  text-decoration: underline;
+}
+
+/* Sections Toggling */
+.form-section {
+  display: none;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-section.active {
+  display: flex;
+}
+
+</style>
+</head>
+<body>
+
+<div class="login-container">
+    <!-- Header -->
+    <div class="login-header">
+        <div class="icon-box">
+            <i data-lucide="table-properties" id="header-icon"></i>
+        </div>
+        <h1 id="header-title">Iniciar Sesión</h1>
+        <p id="header-subtitle">Plataforma SaaS Bronze Gantt Pro</p>
+    </div>
+
+    <!-- Alert Notification -->
+    <div class="alert-banner" id="alert-box">
+        <i data-lucide="alert-circle" style="width: 16px; height: 16px;"></i>
+        <span id="alert-msg">Error</span>
+    </div>
+
+    <!-- SECTION 1: LOGIN -->
+    <div class="form-section active" id="sec-login">
+        <div class="form-group">
+            <label for="login-email">Correo Electrónico</label>
+            <div class="input-wrapper">
+                <i data-lucide="mail"></i>
+                <input type="email" id="login-email" placeholder="ejemplo@correo.com">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="login-pass">Contraseña</label>
+            <div class="input-wrapper">
+                <i data-lucide="lock"></i>
+                <input type="password" id="login-pass" placeholder="••••••••">
+            </div>
+        </div>
+        <button class="btn" id="btn-login-submit">
+            Iniciar Sesión <i data-lucide="arrow-right"></i>
+        </button>
+        <div class="form-footer">
+            ¿No tienes una cuenta? <a href="#" onclick="showSection('register')">Regístrate gratis</a>
+        </div>
+    </div>
+
+    <!-- SECTION 2: REGISTER -->
+    <div class="form-section" id="sec-register">
+        <div class="form-group">
+            <label for="reg-email">Correo Electrónico</label>
+            <div class="input-wrapper">
+                <i data-lucide="mail"></i>
+                <input type="email" id="reg-email" placeholder="ejemplo@correo.com">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="reg-pass">Contraseña</label>
+            <div class="input-wrapper">
+                <i data-lucide="lock"></i>
+                <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres">
+            </div>
+        </div>
+        <button class="btn" id="btn-register-submit">
+            Crear Cuenta <i data-lucide="user-plus"></i>
+        </button>
+        <div class="form-footer">
+            ¿Ya tienes cuenta? <a href="#" onclick="showSection('login')">Inicia sesión</a>
+        </div>
+    </div>
+
+    <!-- SECTION 3: ACTIVATE LICENSE -->
+    <div class="form-section" id="sec-activate">
+        <div style="background-color: var(--bronze-soft); padding: 12px; border-radius: var(--radius-sm); border-left: 4px solid var(--bronze); font-size: 11.5px; line-height: 1.4; color: var(--text-medium);">
+            <strong>¡Cuenta creada!</strong> Su cuenta no tiene una licencia activa. Por favor introduce la clave de licencia para activar la aplicación.
+        </div>
+        <div class="form-group">
+            <label for="lic-key">Clave de Licencia (License Key)</label>
+            <div class="input-wrapper">
+                <i data-lucide="key"></i>
+                <input type="text" id="lic-key" placeholder="GANTT-XXXX-XXXX-XXXX">
+            </div>
+        </div>
+        <button class="btn" id="btn-activate-submit">
+            Activar Licencia <i data-lucide="unlock"></i>
+        </button>
+        <div class="form-footer">
+            <a href="#" onclick="logoutUser()">Cerrar Sesión</a>
+        </div>
+    </div>
+</div>
+
+<div class="login-footer" style="text-align: center; margin-top: 24px; font-size: 10px; color: var(--text-medium); opacity: 0.85; font-family: 'Inter', sans-serif;">
+    Bronze APPS &bull; <a href="mailto:appsbronze86@yahoo.com" style="color: var(--text-dark); text-decoration: none; font-weight: 500;">appsbronze86@yahoo.com</a> &bull; <a href="https://wa.me/522227060073" target="_blank" style="color: var(--text-dark); text-decoration: none; font-weight: 500;">WhatsApp: +52 2227060073</a>
+</div>
+
+<script>
+// Manejar navegación de secciones
+function showSection(section) {
+  hideAlert();
+  document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+  
+  const title = document.getElementById('header-title');
+  const subtitle = document.getElementById('header-subtitle');
+  const icon = document.getElementById('header-icon');
+
+  if (section === 'login') {
+    document.getElementById('sec-login').classList.add('active');
+    title.textContent = 'Iniciar Sesión';
+    subtitle.textContent = 'Plataforma SaaS Bronze Gantt Pro';
+    icon.setAttribute('data-lucide', 'table-properties');
+  } else if (section === 'register') {
+    document.getElementById('sec-register').classList.add('active');
+    title.textContent = 'Crear Cuenta';
+    subtitle.textContent = 'Regístrate y comienza a estructurar cronogramas';
+    icon.setAttribute('data-lucide', 'user-plus');
+  } else if (section === 'activate') {
+    document.getElementById('sec-activate').classList.add('active');
+    title.textContent = 'Activar Licencia';
+    subtitle.textContent = 'Ingrese su clave de acceso para desbloquear';
+    icon.setAttribute('data-lucide', 'key');
+  }
+  lucide.createIcons();
+}
+
+// Mostrar y ocultar alertas
+function showAlert(message, type = 'error') {
+  const box = document.getElementById('alert-box');
+  const msg = document.getElementById('alert-msg');
+  
+  box.className = `alert-banner ${type}`;
+  msg.textContent = message;
+  
+  const oldIcon = box.querySelector('i, svg');
+  if (oldIcon) oldIcon.remove();
+  
+  const newIcon = document.createElement('i');
+  newIcon.setAttribute('data-lucide', type === 'success' ? 'check-circle-2' : 'alert-circle');
+  newIcon.style.width = '16px';
+  newIcon.style.height = '16px';
+  box.insertBefore(newIcon, msg);
+  
+  box.style.display = 'flex';
+  lucide.createIcons();
+}
+
+function hideAlert() {
+  document.getElementById('alert-box').style.display = 'none';
+}
+
+// Inicialización
+document.addEventListener("DOMContentLoaded", () => {
+  lucide.createIcons();
+
+  const token = localStorage.getItem('token');
+  const licenseActive = localStorage.getItem('licenseActive') === 'true';
+
+  if (window.location.protocol === 'file:') {
+    showAlert('ADVERTENCIA DE DESARROLLO: Has abierto este archivo haciendo doble clic (file://). Debes abrir el navegador e ingresar a http://localhost:3001/login.html para que la base de datos y licencias funcionen.', 'error');
+  }
+
+  if (token) {
+    if (licenseActive) {
+      window.location.href = '/app.html';
+    } else {
+      showSection('activate');
+    }
+  }
+
+  document.getElementById('btn-login-submit').addEventListener('click', handleLogin);
+  document.getElementById('btn-register-submit').addEventListener('click', handleRegister);
+  document.getElementById('btn-activate-submit').addEventListener('click', handleActivate);
+});
+
+// LOGIN ACTION
+async function handleLogin() {
+  hideAlert();
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-pass').value;
+
+  if (!email || !password) {
+    showAlert('Complete todos los campos.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showAlert(data.error || 'Error al iniciar sesión.');
+      return;
+    }
+
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('email', data.email);
+    localStorage.setItem('licenseActive', data.licenseActive);
+
+    if (data.licenseActive) {
+      window.location.href = '/app.html';
+    } else {
+      showSection('activate');
+    }
+  } catch (err) {
+    console.error(err);
+    showAlert('Error de conexión con el servidor.');
+  }
+}
+
+// REGISTER ACTION
+async function handleRegister() {
+  hideAlert();
+  const email = document.getElementById('reg-email').value;
+  const password = document.getElementById('reg-pass').value;
+
+  if (!email || !password) {
+    showAlert('Complete todos los campos.');
+    return;
+  }
+
+  if (password.length < 6) {
+    showAlert('La contraseña debe tener al menos 6 caracteres.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showAlert(data.error || 'Error al registrar usuario.');
+      return;
+    }
+
+    showAlert('¡Cuenta creada con éxito! Por favor, inicie sesión a continuación.', 'success');
+    
+    document.getElementById('reg-email').value = '';
+    document.getElementById('reg-pass').value = '';
+
+    setTimeout(() => {
+      showSection('login');
+    }, 2200);
+  } catch (err) {
+    console.error(err);
+    showAlert('Error de conexión con el servidor.');
+  }
+}
+
+// ACTIVATE ACTION
+async function handleActivate() {
+  hideAlert();
+  const licenseKey = document.getElementById('lic-key').value;
+  const token = localStorage.getItem('token');
+
+  if (!licenseKey) {
+    showAlert('Por favor introduzca su código de activación.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/license/activate', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ licenseKey })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showAlert(data.error || 'Error al activar la licencia.');
+      return;
+    }
+
+    showAlert(data.message, 'success');
+    localStorage.setItem('licenseActive', 'true');
+    
+    setTimeout(() => {
+      window.location.href = '/app.html';
+    }, 1500);
+  } catch (err) {
+    console.error(err);
+    showAlert('Error al conectar con el servidor para la activación.');
+  }
+}
+
+// LOGOUT ACTION
+function logoutUser() {
+  localStorage.clear();
+  showSection('login');
+}
+</script>
+</body>
+</html>
